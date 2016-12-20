@@ -17,7 +17,6 @@ class Getproductslist extends \Magento\Framework\View\Element\Template
             ->load();
 
         foreach ($collection as $product){
-            print_r($product);
             echo 'Name  =  '.$product->getName().'<br />';
         }
 
