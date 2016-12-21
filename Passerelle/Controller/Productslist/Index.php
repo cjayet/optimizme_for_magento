@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimizmeformagento\Passerelle\Controller\Getproductslist;
+namespace Optimizmeformagento\Passerelle\Controller\Productslist;
 
 use Magento\Framework\App\Action\Context;
 
