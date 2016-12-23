@@ -3,12 +3,33 @@
 namespace Optimizmeformagento\Passerelle\Helper;
 
 /**
- * Class Data
- * @package Optmizmeformagento\Passerelle\Helper
+ * Class Optmeutils
+ * @package Optimizmeformagento\Passerelle\Helper
  */
-
 class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
 {
+    protected $_storeManager;
+    protected $_wysiwygDirectory;
+    protected $_directoryList;
+
+    /**
+     * Optmeutils constructor.
+     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
+     * @param \Magento\Cms\Model\Wysiwyg\Config $wysiwyg
+     * @param \Magento\Framework\App\Filesystem\DirectoryList $directory_list
+     */
+    public function __construct(
+        \Magento\Store\Model\StoreManagerInterface $storeManager,
+        \Magento\Cms\Model\Wysiwyg\Config $wysiwyg,
+        \Magento\Framework\App\Filesystem\DirectoryList $directory_list
+    )
+    {
+        $this->_storeManager = $storeManager;
+        $this->_wysiwygDirectory = $wysiwyg::IMAGE_DIRECTORY;
+        $this->_directoryList = $directory_list;
+    }
+
+
     /**
      * Dump formatted content
      * @param $s
@@ -70,7 +91,25 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      * @return bool
      */
     public function isMediaInLibrary($urlFile){
-        // TODO
+
+        $storeBaseUrl = $this->_storeManager->getStore()->getBaseUrl();
+        if ( !stristr($urlFile, $storeBaseUrl) ){
+
+            // different: copy to CMS
+            $basenameFile = basename($urlFile);
+            $folder = $this->_storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA ) .'/'. $this->_wysiwygDirectory;
+
+            if (file_exists($folder .'/'. $basenameFile)){
+                return $folder .'/'. $basenameFile;
+            }
+            else{
+                return false;
+            }
+        }
+        else {
+            // same: image already in prestashop
+            return $urlFile;
+        }
     }
 
 
@@ -81,7 +120,25 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function addMediaInLibrary($urlFile){
 
-        // TODO
+        $urlMedia = '';
+        $uploaddir = $this->_directoryList->getPath('media') .'/'. $this->_wysiwygDirectory;
+        $urldir = $this->_storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA ) .'/'. $this->_wysiwygDirectory;
+
+        $nameFile = basename($urlFile);
+        $uploadfile = $uploaddir .'/'. $nameFile;
+
+        // write file in media
+        try {
+            $contents = file_get_contents($urlFile);
+            $savefile = fopen($uploadfile, 'w');
+            fwrite($savefile, $contents);
+            fclose($savefile);
+            $newUrl = $urldir .'/'. $nameFile;
+            return $newUrl;
+        }
+        catch (Exception $e){
+            return false;
+        }
     }
 
     /**
@@ -247,7 +304,7 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
             // need more data
             $objAction->addMsgError('ID product missing');
         }
-        elseif ( $isRequired == 1 && $value == ''){
+        elseif ( $isRequired == 1 && ($value == '' && $value !== 0)){
             // no empty
             $objAction->addMsgError('This field is required');
         }
