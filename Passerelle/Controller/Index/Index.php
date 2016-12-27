@@ -66,17 +66,19 @@ class Index extends \Magento\Framework\App\Action\Action
                     case 'set_post_metatitle' :         $this->_optimizmeaction->updateMetaTitle($postId, $dataOptimizme); break;
                     case 'set_post_slug' :              $this->_optimizmeaction->updateSlug($postId, $dataOptimizme); break;
                     case 'set_post_status' :            $this->_optimizmeaction->updatePostStatus($postId, $dataOptimizme); break;
-                    //case 'set_post_imgattributes' :     $optAction->updateAttributesTag($postId, $dataOptimizme, 'img'); break;
-                    //case 'set_post_hrefattributes' :    $optAction->updateAttributesTag($postId, $dataOptimizme, 'a'); break;
+                    case 'set_post_imgattributes' :     $this->_optimizmeaction->updateAttributesTag($postId, $dataOptimizme, 'img'); break;
+                    case 'set_post_hrefattributes' :    $this->_optimizmeaction->updateAttributesTag($postId, $dataOptimizme, 'a'); break;
 
                     // redirections
+                    // TODO magento
+                    case 'load_redirections':           $this->_optimizmeaction->loadRedirections(); break;
 
                     // load content
                     case 'load_post_content' :          $this->_optimizmeaction->loadPostContent($postId); break;
                     case 'load_posts_pages':            $this->_optimizmeaction->loadPostsPages($dataOptimizme); break;
 
                     // create content
-
+                    // TODO magento
 
                     default:                            $this->boolNoAction = 1; break;
                 }
