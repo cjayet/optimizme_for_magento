@@ -17,30 +17,33 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
 
     protected $_productCollectionFactory;
     protected $_optmeutils;
+    protected $_optmeredirections;
     protected $_urlRewriteFactory;
-    //protected $_urlRewriteCollection;
     protected $_productUrlPathGenerator;
 
     /**
      * Optmeactions constructor.
      * @param \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory
-     * @param Optmeutils $optMeUtils
      * @param \Magento\UrlRewrite\Model\UrlRewriteFactory $urlRewriteFactory
+     * @param \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator $productUrlPathGenerator
+     * @param Optmeutils $optMeUtils
+     * @param Optmeredirections $optMeRedirections
      */
     public function __construct(
         \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory,
-        \Optimizmeformagento\Passerelle\Helper\Optmeutils $optMeUtils,
         \Magento\UrlRewrite\Model\UrlRewriteFactory $urlRewriteFactory,
-        //\Mgento\UrlRewrite\Model\ResourceModel\UrlRewriteCollection $urlRewriteCollection,
-        \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator $productUrlPathGenerator
+        \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator $productUrlPathGenerator,
+        \Optimizmeformagento\Passerelle\Helper\Optmeutils $optMeUtils,
+        \Optimizmeformagento\Passerelle\Helper\Optmeredirections $optMeRedirections
     )
     {
         $this->_productCollectionFactory = $productCollectionFactory;
-        $this->_optmeutils = $optMeUtils;
         $this->_urlRewriteFactory = $urlRewriteFactory;
-        //$this->_urlRewriteCollection = $urlRewriteCollection;
         $this->_productUrlPathGenerator = $productUrlPathGenerator;
+        $this->_optmeutils = $optMeUtils;
+        $this->_optmeredirections = $optMeRedirections;
 
+        // tab messages and returns
         $this->returnResult = array();
         $this->tabErrors = array();
         $this->tabSuccess = array();
@@ -97,9 +100,6 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
                         $urlFile = 'http://localhost'. $urlFile;        // TODO enlever localhost
                         echo "URL SPOTTED"; die;
                     }
-
-                    //print_r($_SERVER);
-
 
                     // check if is media and already in media library
                     if ($this->_optmeutils->isFileMedia($urlFile)){
@@ -290,14 +290,9 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             $redirectTo = $this->_productUrlPathGenerator->getUrlPathWithSuffix($productUpdated, $productUpdated->getStoreId());
 
             // add custom url rewrite
-            $urlRewriteModel = $this->_urlRewriteFactory->create()
-                ->setEntityId($productUpdated->getId())
-                ->setRequestPath($redirectFrom)
-                ->setTargetPath($redirectTo)
-                ->setEntityType('custom')
-                ->setRedirectType('301')
-                ->setStoreId($productUpdated->getStoreId())
-                ->save();
+            $this->_optmeredirections->addRedirection($productUpdated->getId(), $redirectFrom, $redirectTo, $productUpdated->getStoreId());
+
+
         }
     }
 
@@ -321,9 +316,6 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
                     $product->setDescription('<div class="row ui-droppable"><div class="col-md-12 col-sm-12 col-xs-12 column"><div class="ge-content ge-content-type-tinymce" data-ge-content-type="tinymce">'. $product->getDescription() .'</div></div></div>');
                 }
             }
-
-
-            //if ($product->getShortDescription() === null)     $product->setShortDescription('&nbsp;');
 
             // load and return product data
             $this->returnAjax['title'] = $product->getName();
@@ -390,40 +382,31 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * load list of redirections
+     * load list of custom redirections
      */
     public function loadRedirections(){
-        //echo "LOAD REDIRECTIONS";
 
-        //$collection = $this->_urlRewriteFactory->create();
-        //$products = $collection->getData();
+        $tabResults = array();
+        $magRedirections = $this->_optmeredirections->getAllRedirections();
 
-        $collection = $this->_urlRewriteFactory->create();
-        $products = $collection->getData();
+        if (is_array($magRedirections) && count($magRedirections)>0){
 
-        var_dump($products);
-        die;
+            foreach ($magRedirections as $redirection){
 
+                // get store base url for this url rewrite (depending from store id)
+                $storeBaseUrl = $this->_optmeutils->getStoreBaseUrl($redirection['store_id']);
 
-        //$this->returnAjax['redirections'] = OptimizMeRedirections::getAllRedirections('all');
+                array_push($tabResults, array(
+                    'id' => $redirection['url_rewrite_id'],
+                    'request_path' => $storeBaseUrl. $redirection['request_path'],
+                    'target_path' => $storeBaseUrl. $redirection['target_path']
+                ));
+            }
+        }
+
+        $this->returnAjax['redirections'] = $tabResults;
     }
 
-    /**
-     * Enable or disable a redirection
-     * @param $objData
-     * @param int $flagDisabled
-     */
-    public function enableDisableRedirection($objData, $flagDisabled=0){
-        if (!isset($objData->id_redirection) || $objData->id_redirection == ''){
-            // need more data
-            array_push($this->tabErrors, __('Redirection non trouvée', 'optimizme'));
-        }
-        else {
-            $redirection = new OptimizMeRedirections();
-            if ($flagDisabled == 0)     $redirection->enableRedirection($objData->id_redirection);
-            else                        $redirection->disableRedirection($objData->id_redirection);
-        }
-    }
 
     /**
      * @param $objData
@@ -434,11 +417,9 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             array_push($this->tabErrors, __('Redirection non trouvée', 'optimizme'));
         }
         else {
-            $redirection = new OptimizMeRedirections();
-            $redirection->deleteRedirection($objData->id_redirection);
+            $this->_optmeredirections->deleteRedirection($objData->id_redirection);
         }
     }
-
 
 
     /**

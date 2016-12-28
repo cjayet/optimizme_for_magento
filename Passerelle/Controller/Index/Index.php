@@ -1,9 +1,12 @@
 <?php
-
 namespace Optimizmeformagento\Passerelle\Controller\Index;
-
 use Magento\Framework\App\Action\Context;
 
+
+/**
+ * Class Index
+ * @package Optimizmeformagento\Passerelle\Controller\Index
+ */
 class Index extends \Magento\Framework\App\Action\Action
 {
     protected $_resultPageFactory;
@@ -11,6 +14,11 @@ class Index extends \Magento\Framework\App\Action\Action
     protected $_optimizmeutils;
     protected $boolNoAction;
 
+    /**
+     * Index constructor.
+     * @param Context $context
+     * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
+     */
     public function __construct(
         Context $context,
         \Magento\Framework\View\Result\PageFactory $resultPageFactory
@@ -18,7 +26,9 @@ class Index extends \Magento\Framework\App\Action\Action
     {
         $this->_resultPageFactory = $resultPageFactory;
         $this->boolNoAction = 0;
+
         parent::__construct($context);
+
     }
 
 
@@ -50,7 +60,7 @@ class Index extends \Magento\Framework\App\Action\Action
             if ($dataOptimizme->action == '')
             {
                 // no action specified
-                $msg = 'Aucune action de définie';
+                $msg = 'No action defined';
                 $this->_optimizmeaction->setMsgReturn($msg, 'danger');
             }
             else
@@ -70,8 +80,8 @@ class Index extends \Magento\Framework\App\Action\Action
                     case 'set_post_hrefattributes' :    $this->_optimizmeaction->updateAttributesTag($postId, $dataOptimizme, 'a'); break;
 
                     // redirections
-                    // TODO magento
                     case 'load_redirections':           $this->_optimizmeaction->loadRedirections(); break;
+                    case 'redirection_delete':          $this->_optimizmeaction->deleteRedirection($dataOptimizme); break;
 
                     // load content
                     case 'load_post_content' :          $this->_optimizmeaction->loadPostContent($postId); break;
@@ -88,7 +98,7 @@ class Index extends \Magento\Framework\App\Action\Action
                 if ($this->boolNoAction == 1)
                 {
                     // no action done
-                    $msg = 'Aucune action trouvée.';
+                    $msg = 'No action found.';
                     $this->_optimizmeaction->setMsgReturn($msg, 'danger');
                 }
                 else

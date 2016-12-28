@@ -339,4 +339,13 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
 
+    /**
+     * @param $idStore
+     * @return mixed
+     */
+    public function getStoreBaseUrl($idStore){
+        return $this->_storeManager->getStore($idStore)->getBaseUrl();
+
+    }
+
 }
