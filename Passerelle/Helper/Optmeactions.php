@@ -56,7 +56,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateTitle($idPost, $objData){
-        $this->_optmeutils->saveProductField($idPost, 'setName', $objData->new_title, $this, 1);
+        $this->_optmeutils->saveProductField($idPost, 'Name', $objData->new_title, $this, 1);
     }
 
     /**
@@ -126,7 +126,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             $newContent = $this->_optmeutils->cleanHtmlFromEasycontent($newContent);
 
             // save product content
-            $this->_optmeutils->saveProductField($idPost, 'setDescription', $newContent, $this);
+            $this->_optmeutils->saveProductField($idPost, 'Description', $newContent, $this);
 
             if (count($this->tabErrors) == 0){
                 $this->returnAjax['message'] = 'Contenu enregistré avec succès';
@@ -141,7 +141,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateShortDescription($idPost, $objData){
-        $this->_optmeutils->saveProductField($idPost, 'setShortDescription', $objData->new_short_description, $this);
+        $this->_optmeutils->saveProductField($idPost, 'ShortDescription', $objData->new_short_description, $this);
     }
 
     /**
@@ -206,7 +206,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
                     $newContent = $this->_optmeutils->getHtmlFromDom($doc);
 
                     // update
-                    $this->_optmeutils->saveProductField($idProduct, 'setDescription', $newContent, $this);
+                    $this->_optmeutils->saveProductField($idProduct, 'Description', $newContent, $this);
 
                 }
                 else {
@@ -222,7 +222,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateMetaDescription($idPost, $objData){
-        $this->_optmeutils->saveProductField($idPost, 'setMetaDescription', $objData->meta_description, $this);
+        $this->_optmeutils->saveProductField($idPost, 'MetaDescription', $objData->meta_description, $this);
     }
 
     /**
@@ -230,7 +230,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateMetaTitle($idPost, $objData){
-        $this->_optmeutils->saveProductField($idPost, 'setMetaTitle', $objData->meta_title, $this);
+        $this->_optmeutils->saveProductField($idPost, 'MetaTitle', $objData->meta_title, $this);
     }
 
 
@@ -258,7 +258,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function updatePostStatus($idPost, $objData){
         if ( !isset($objData->is_publish) )         $objData->is_publish = 0;
-        $this->_optmeutils->saveProductField($idPost, 'setStatus', $objData->is_publish, $this, 1);
+        $this->_optmeutils->saveProductField($idPost, 'Status', $objData->is_publish, $this, 1);
     }
 
 
@@ -271,28 +271,48 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function updateSlug($idPost, $objData){
 
-        // load product init (for after)
-        $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
-        $productInit = $objectManager->create('Magento\Catalog\Model\Product')->load($idPost);
-
-        // save new url key
-        $productUpdated = $this->_optmeutils->saveProductField($idPost, 'setUrlKey', $objData->new_slug, $this, 1);
-
-        if ( $productUpdated->getId() && $productUpdated->getId() != ''){
-
-            // save url key ok : change url
-            $this->returnAjax['url'] = $productUpdated->getUrlModel()->getUrl($productUpdated);
-            $this->returnAjax['message'] = 'URL changed';
-            $this->returnAjax['new_slug'] = $productUpdated->getUrlKey();
-
-            // get redirects (from >> to)
+        if ( !is_numeric($idPost)){
+            // need more data
+            $this->addMsgError('ID product missing');
+        }
+        elseif ( $objData->new_slug == '' ){
+            // no empty
+            $this->addMsgError('This field is required');
+        }
+        else {
+            // load product init (for after)
+            $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
+            $productInit = $objectManager->create('Magento\Catalog\Model\Product')->load($idPost);
             $redirectFrom = $this->_productUrlPathGenerator->getUrlPathWithSuffix($productInit, $productInit->getStoreId());
-            $redirectTo = $this->_productUrlPathGenerator->getUrlPathWithSuffix($productUpdated, $productUpdated->getStoreId());
 
-            // add custom url rewrite
-            $this->_optmeredirections->addRedirection($productUpdated->getId(), $redirectFrom, $redirectTo, $productUpdated->getStoreId());
+            // if custom url exists: remove
+            $productExpected = $productInit;
+            $productExpected->setUrlKey($objData->new_slug);
+            $redirectCheck = $this->_productUrlPathGenerator->getUrlPathWithSuffix($productExpected, $productExpected->getStoreId());
+            $this->_optmeredirections->deleteRedirectionByRequestPath($redirectCheck);
 
+            // save new url key
+            $productUpdated = $this->_optmeutils->saveProductField($idPost, 'UrlKey', $objData->new_slug, $this, 1);
 
+            if (!$productUpdated){
+                // no update
+            }
+            else {
+                if ( $productUpdated->getId() && $productUpdated->getId() != ''){
+
+                    // save url key ok : change url
+                    $this->returnAjax['url'] = $productUpdated->getUrlModel()->getUrl($productUpdated);
+                    $this->returnAjax['message'] = 'URL changed';
+                    $this->returnAjax['new_slug'] = $productUpdated->getUrlKey();
+
+                    // get redirects (from >> to)
+                    $redirectTo = $this->_productUrlPathGenerator->getUrlPathWithSuffix($productUpdated, $productUpdated->getStoreId());
+
+                    // add custom url rewrite
+                    $this->_optmeredirections->addRedirection($productUpdated->getId(), $redirectFrom, $redirectTo, $productUpdated->getStoreId());
+
+                }
+            }
         }
     }
 

@@ -38,24 +38,16 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
     function addRedirection($entityId, $oldUrl, $newUrl, $storeId){
 
         $result = '';
+        // add in database if necessary
 
-        // add in database
         if ($oldUrl != $newUrl){
-
             // check if url already exists
-            $redirection = $this->getRedirection($oldUrl);
-            if ($redirection->id != ''){
-                // update existing redirection
-                /*$wpdb->update(
-                    $wpdb->prefix. 'optimizme_redirections',
-                    array('url_redirect' => $newUrl, 'updated_at' => date('Y-m-d H:i:s')),
-                    array('id' => $redirection->id ),
-                    array('%s', '%s')
-                );*/
-
-                // TODO
-
-                $result = 'update';
+            $redirection = $this->getRedirectionByRequestPath($oldUrl);
+            if (is_array($redirection) && count($redirection)>0){
+                // update
+                $urlRewrite = $this->_urlRewrite->load($redirection['url_rewrite_id']);
+                $urlRewrite->setTargetPath($newUrl);
+                $urlRewrite->save();
             }
             else {
                 // insert redirection
@@ -77,41 +69,45 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
             $result = 'same';
         }
 
-        // check if there is no double redirection
-        $this->checkAndPurgeUrlIfDoubleRedirections();
-
         return $result;
     }
 
 
     /**
-     * Edit redirection
-     */
-    function editRedirection($id, $field, $value){
-        // TODO
-        /*
-        global $wpdb;
-
-        if ($id !=''){
-            $wpdb->update(
-                $wpdb->prefix .'optimizme_redirections',
-                array( $field => $value, 'updated_at' => date('Y-m-d H:i:s') ),
-                array( 'ID' => $id )
-            );
-        }
-        return false;
-        */
-    }
-
-    /**
      * @param $id
      */
-    function deleteRedirection($id){
+    public function deleteRedirection($id){
         $redirectionToDelete = $this->_urlRewrite->load($id);
         if ($redirectionToDelete->getId() && is_numeric($redirectionToDelete->getId())){
             $redirectionToDelete->delete();
         }
     }
+
+
+    /**
+     * @param $requestPath
+     * @return array
+     */
+    public function deleteRedirectionByRequestPath($requestPath){
+
+        $magRedirections = $this->_urlRewriteFactory->create()
+            ->getCollection()
+            ->addFieldToFilter('request_path', $requestPath)
+            ->getData();
+
+        if (is_array($magRedirections) && count($magRedirections)>0){
+            foreach ($magRedirections as $magRedirection){
+                $customUrl = $this->_urlRewriteFactory->create()->load($magRedirection['url_rewrite_id']);
+                if ($customUrl && $customUrl->getId()){
+                    $customUrl->delete();
+                }
+            }
+        }
+
+        return $magRedirections;
+    }
+
+
 
     /**
      * @param string $statut
@@ -131,47 +127,15 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $oldUrl
      * @return array|null|object|void
      */
-    public function getRedirection($oldUrl, $isDisabled=0){
-        // TODO
-        /*global $wpdb;
-        $redirection = 'SELECT * 
-                        FROM '. $wpdb->prefix .'optimizme_redirections 
-                        WHERE url_base LIKE "%'. $oldUrl .'"
-                        AND is_disabled="'. $isDisabled .'" ';
-        $objRedirect = $wpdb->get_row($redirection);
+    public function getRedirectionByRequestPath($oldUrl){
 
-        return $objRedirect;
-        */
+        $magRedirections = $this->_urlRewriteFactory->create()
+            ->getCollection()
+            ->addFieldToFilter('entity_type', 'custom')
+            ->addFieldToFilter('request_path', $oldUrl)
+            ->getFirstItem()
+            ->getData();
+
+        return $magRedirections;
     }
-
-
-    /**
-     * Purge double redirections
-     *  ex: link1 redirect to link2
-     *      link2 redirect to link3
-     *      => link1 redirect to link3
-     */
-    public function checkAndPurgeUrlIfDoubleRedirections(){
-
-        // TODO
-
-        /*global $wpdb;
-
-        // get redirects which have another redirection
-        $sql = 'SELECT r1.id as r1id, r1.url_base as r1url_base, r1.url_redirect as r1url_redirect,
-                      r2.id as r2id, r2.url_redirect as r2url_redirect
-                FROM '. $wpdb->prefix .'optimizme_redirections r1
-                JOIN '. $wpdb->prefix .'optimizme_redirections r2 on r1.id != r2.id
-                WHERE r2.url_base = r1.url_redirect';
-        $results = $wpdb->get_results($sql);
-
-        if (is_array($results) && count($results)>0){
-            foreach ($results as $doubleRedirection){
-                $this->editRedirection($doubleRedirection->r1id, 'url_redirect', $doubleRedirection->r2url_redirect);
-            }
-        }*/
-
-    }
-
-
 }

@@ -175,7 +175,6 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      * @return mixed
      */
     public function getMetaDescription($post){
-
         // TODO
     }
 
@@ -292,13 +291,13 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * @param $idProduct
-     * @param $function
+     * @param $field
      * @param $value
      * @param $objAction
      * @param int $isRequired
      * @return bool
      */
-    public function saveProductField($idProduct, $function, $value, $objAction, $isRequired=0){
+    public function saveProductField($idProduct, $field, $value, $objAction, $isRequired=0){
 
         if ( !is_numeric($idProduct)){
             // need more data
@@ -310,7 +309,7 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
         }
         elseif (!isset($value)){
             // need more data
-            $objAction->addMsgError('Function '. $function .' missing');
+            $objAction->addMsgError('Function '. $field .' missing');
         }
         else{
             // all is ok: try to save
@@ -322,21 +321,31 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
                 $objAction->addMsgError('Loading product failed', 1);
             }
             else {
-                // update
-                try {
-                    $product->$function($value);
-                    $product->save();
-                    return $product;
+                // update if different
+                $setter = 'set'. $field;
+                $getter = 'get'. $field;
+
+                $currentValue = $product->$getter();
+                if ($currentValue != $value){
+                    // new value => save
+                    try {
+                        $product->$setter($value);
+                        $product->save();
+                        return $product;
+                    }
+                    catch (Exception $e){
+                        $objAction->addMsgError('Product not saved, '. $e->getMessage(), 1);
+                    }
                 }
-                catch (Exception $e){
-                    $objAction->addMsgError('Product not saved, '. $e->getMessage(), 1);
-                }
+
             }
         }
 
         // error somewhere
         return false;
     }
+
+
 
 
     /**
