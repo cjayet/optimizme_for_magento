@@ -292,12 +292,13 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * @param $idProduct
      * @param $field
+     * @param $type
      * @param $value
      * @param $objAction
      * @param int $isRequired
-     * @return bool
+     * @return bool|\Magento\Catalog\Model\Product
      */
-    public function saveProductField($idProduct, $field, $value, $objAction, $isRequired=0){
+    public function saveObjField($idProduct, $field, $type, $value, $objAction, $isRequired=0){
 
         if ( !is_numeric($idProduct)){
             // need more data
@@ -315,8 +316,9 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
             // all is ok: try to save
             // get product details
             $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
-            $product = $objectManager->create('Magento\Catalog\Model\Product')->load($idProduct);
+            $product = $objectManager->create('Magento\Catalog\Model\\'. $type)->load($idProduct);
 
+            /* @var \Magento\Catalog\Model\Product $product */
             if ($product->getId() == ''){
                 $objAction->addMsgError('Loading product failed', 1);
             }

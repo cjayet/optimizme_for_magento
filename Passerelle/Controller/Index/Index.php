@@ -87,6 +87,13 @@ class Index extends \Magento\Framework\App\Action\Action
                     case 'load_post_content' :          $this->_optimizmeaction->loadPostContent($postId); break;
                     case 'load_posts_pages':            $this->_optimizmeaction->loadPostsPages($dataOptimizme); break;
 
+                    // categories
+                    case 'load_categories':            $this->_optimizmeaction->loadCategories($dataOptimizme); break;
+                    case 'load_category_content':      $this->_optimizmeaction->loadCategoryContent($postId, $dataOptimizme); break;
+                    case 'set_category_name':          $this->_optimizmeaction->setCategoryName($postId, $dataOptimizme); break;
+                    case 'set_category_description':   $this->_optimizmeaction->setCategoryDescription($postId, $dataOptimizme); break;
+
+
                     // create content
                     // TODO magento
 

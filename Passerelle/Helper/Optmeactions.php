@@ -16,6 +16,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
     public $returnAjax;
 
     protected $_productCollectionFactory;
+    protected $_categoryCollectionFactory;
     protected $_optmeutils;
     protected $_optmeredirections;
     protected $_urlRewriteFactory;
@@ -31,6 +32,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function __construct(
         \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory,
+        \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory $categoryCollectionFactory,
         \Magento\UrlRewrite\Model\UrlRewriteFactory $urlRewriteFactory,
         \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator $productUrlPathGenerator,
         \Optimizmeformagento\Passerelle\Helper\Optmeutils $optMeUtils,
@@ -38,6 +40,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
     )
     {
         $this->_productCollectionFactory = $productCollectionFactory;
+        $this->_categoryCollectionFactory = $categoryCollectionFactory;
         $this->_urlRewriteFactory = $urlRewriteFactory;
         $this->_productUrlPathGenerator = $productUrlPathGenerator;
         $this->_optmeutils = $optMeUtils;
@@ -56,7 +59,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateTitle($idPost, $objData){
-        $this->_optmeutils->saveProductField($idPost, 'Name', $objData->new_title, $this, 1);
+        $this->_optmeutils->saveObjField($idPost, 'Name', 'Product', $objData->new_title, $this, 1);
     }
 
     /**
@@ -96,10 +99,12 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
                 {
                     // url media in easycontent
                     $urlFile = $node->getAttribute($attr);
+                    /*
                     if(!(strpos($urlFile, 'http') === 0)){
                         $urlFile = 'http://localhost'. $urlFile;        // TODO enlever localhost
                         echo "URL SPOTTED"; die;
                     }
+                    */
 
                     // check if is media and already in media library
                     if ($this->_optmeutils->isFileMedia($urlFile)){
@@ -126,7 +131,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             $newContent = $this->_optmeutils->cleanHtmlFromEasycontent($newContent);
 
             // save product content
-            $this->_optmeutils->saveProductField($idPost, 'Description', $newContent, $this);
+            $this->_optmeutils->saveObjField($idPost, 'Description', 'Product', $newContent, $this);
 
             if (count($this->tabErrors) == 0){
                 $this->returnAjax['message'] = 'Contenu enregistré avec succès';
@@ -141,7 +146,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateShortDescription($idPost, $objData){
-        $this->_optmeutils->saveProductField($idPost, 'ShortDescription', $objData->new_short_description, $this);
+        $this->_optmeutils->saveObjField($idPost, 'ShortDescription', 'Product', $objData->new_short_description, $this);
     }
 
     /**
@@ -206,7 +211,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
                     $newContent = $this->_optmeutils->getHtmlFromDom($doc);
 
                     // update
-                    $this->_optmeutils->saveProductField($idProduct, 'Description', $newContent, $this);
+                    $this->_optmeutils->saveObjField($idProduct, 'Description', 'Product', $newContent, $this);
 
                 }
                 else {
@@ -222,7 +227,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateMetaDescription($idPost, $objData){
-        $this->_optmeutils->saveProductField($idPost, 'MetaDescription', $objData->meta_description, $this);
+        $this->_optmeutils->saveObjField($idPost, 'MetaDescription', 'Product', $objData->meta_description, $this);
     }
 
     /**
@@ -230,7 +235,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateMetaTitle($idPost, $objData){
-        $this->_optmeutils->saveProductField($idPost, 'MetaTitle', $objData->meta_title, $this);
+        $this->_optmeutils->saveObjField($idPost, 'MetaTitle', 'Product', $objData->meta_title, $this);
     }
 
 
@@ -258,10 +263,8 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function updatePostStatus($idPost, $objData){
         if ( !isset($objData->is_publish) )         $objData->is_publish = 0;
-        $this->_optmeutils->saveProductField($idPost, 'Status', $objData->is_publish, $this, 1);
+        $this->_optmeutils->saveObjField($idPost, 'Status', 'Product', $objData->is_publish, $this, 1);
     }
-
-
 
     /**
      * Change permalink of a post
@@ -292,7 +295,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             $this->_optmeredirections->deleteRedirectionByRequestPath($redirectCheck);
 
             // save new url key
-            $productUpdated = $this->_optmeutils->saveProductField($idPost, 'UrlKey', $objData->new_slug, $this, 1);
+            $productUpdated = $this->_optmeutils->saveObjField($idPost, 'UrlKey', 'Product', $objData->new_slug, $this, 1);
 
             if (!$productUpdated){
                 // no update
@@ -324,8 +327,10 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function loadPostContent($idPost){
 
+        /* @var \Magento\Catalog\Model\Product $product */
         // get product details
         $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
+        //$product = $objectManager->create('Magento\Catalog\Model\Product')->setStoreId(2)->load($idPost);
         $product = $objectManager->create('Magento\Catalog\Model\Product')->load($idPost);
 
         if ($product->getId() != ''){
@@ -352,7 +357,6 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             $this->returnAjax['blog_public'] = 1;
         }
     }
-
 
     /**
      * Load posts/pages
@@ -391,6 +395,81 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         $this->returnAjax['arborescence'] = $tabResults;
     }
 
+    /**
+     * @param $objData
+     */
+    public function loadCategories($objData){
+
+        /* @var $category \Magento\Catalog\Model\Category */
+        $tabResults = array();
+
+        // don't get root category
+        //$categories = Category::getCategories($langCategories, true, false, ' AND id_parent > 0 ');
+        $categories = $this->_categoryCollectionFactory->create()->getData(); //->getData();
+
+        if (count($categories)>0) {
+            foreach ($categories as $categoryLoop) {
+
+                // get category details
+                $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
+                $category = $objectManager->create('Magento\Catalog\Model\Category')->load($categoryLoop['entity_id']);
+
+                $categoryInfos = array(
+                    'id' => $category->getId(),
+                    'name' => $category->getName(),
+                    'description' => $category->getDescription(),
+                    'slug' => $category->getUrlKey()
+                    /*,
+                    'publish' => $categoryLoop['active'],
+                    'id_shop' => $categoryLoop['id_shop'],
+                    'id_lang' => $categoryLoop['id_lang'],*/
+                );
+
+                array_push($tabResults, $categoryInfos);
+            }
+        }
+
+        $this->returnAjax['categories'] = $tabResults;
+    }
+
+    /**
+     * @param $elementId
+     * @param $objData
+     */
+    public function loadCategoryContent($elementId, $objData){
+        /* @var $category \Magento\Catalog\Model\Category */
+        $tabCategory = array();
+
+        // get category details
+        $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
+        $category = $objectManager->create('Magento\Catalog\Model\Category')->load($elementId);
+
+        if ($category->getId() && $category->getId() != ''){
+            $tabCategory['id'] = $category->getId();
+            $tabCategory['name'] = $category->getName();
+            $tabCategory['description'] = $category->getDescription();
+        }
+
+        $this->returnAjax['message'] = 'Category loaded';
+        $this->returnAjax['category'] = $tabCategory;
+    }
+
+    /**
+     * @param $idCategory
+     * @param $objData
+     */
+    public function setCategoryName($idCategory, $objData){
+        $this->_optmeutils->saveObjField($idCategory, 'Name', 'Category', $objData->name, $this);
+    }
+
+    /**
+     * @param $idCategory
+     * @param $objData
+     */
+    public function setCategoryDescription($idCategory, $objData){
+        $this->_optmeutils->saveObjField($idCategory, 'Description', 'Category', $objData->description, $this);
+    }
+
 
     /**
      * Load false content
@@ -427,7 +506,6 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         $this->returnAjax['redirections'] = $tabResults;
     }
 
-
     /**
      * @param $objData
      */
@@ -440,7 +518,6 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             $this->_optmeredirections->deleteRedirection($objData->id_redirection);
         }
     }
-
 
     /**
      * Check if has error or not
@@ -486,8 +563,6 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         echo json_encode($this->returnResult);
     }
 
-
-
     /**
      * Création d'un post
      * @param $objData
@@ -495,7 +570,6 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
     public function createPost($objData){
         // TODO magento
     }
-
 
     /**
      * @param $msg
