@@ -21,6 +21,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
     protected $_optmeredirections;
     protected $_urlRewriteFactory;
     protected $_productUrlPathGenerator;
+    protected $_categoryUrlPathGenerator;
 
     /**
      * Optmeactions constructor.
@@ -35,6 +36,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory $categoryCollectionFactory,
         \Magento\UrlRewrite\Model\UrlRewriteFactory $urlRewriteFactory,
         \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator $productUrlPathGenerator,
+        \Magento\CatalogUrlRewrite\Model\CategoryUrlPathGenerator $categoryUrlPathGenerator,
         \Optimizmeformagento\Passerelle\Helper\Optmeutils $optMeUtils,
         \Optimizmeformagento\Passerelle\Helper\Optmeredirections $optMeRedirections
     )
@@ -43,6 +45,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_categoryCollectionFactory = $categoryCollectionFactory;
         $this->_urlRewriteFactory = $urlRewriteFactory;
         $this->_productUrlPathGenerator = $productUrlPathGenerator;
+        $this->_categoryUrlPathGenerator = $categoryUrlPathGenerator;
         $this->_optmeutils = $optMeUtils;
         $this->_optmeredirections = $optMeRedirections;
 
@@ -447,6 +450,8 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         if ($category->getId() && $category->getId() != ''){
             $tabCategory['id'] = $category->getId();
             $tabCategory['name'] = $category->getName();
+            $tabCategory['slug'] = $category->getUrlKey();
+            $tabCategory['url'] = $category->getUrl();
             $tabCategory['description'] = $category->getDescription();
         }
 
@@ -459,7 +464,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function setCategoryName($idCategory, $objData){
-        $this->_optmeutils->saveObjField($idCategory, 'Name', 'Category', $objData->name, $this);
+        $this->_optmeutils->saveObjField($idCategory, 'Name', 'Category', $objData->new_name, $this);
     }
 
     /**
@@ -468,6 +473,61 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function setCategoryDescription($idCategory, $objData){
         $this->_optmeutils->saveObjField($idCategory, 'Description', 'Category', $objData->description, $this);
+    }
+
+
+    /**
+     * Change permalink of a post
+     * and add a redirection
+     * @param $idPost
+     * @param $objData
+     */
+    public function updateCategorySlug($idCategory, $objData){
+        /* @var $categoryInit \Magento\Catalog\Model\Category */
+
+        if ( !is_numeric($idCategory)){
+            // need more data
+            $this->addMsgError('ID category missing');
+        }
+        elseif ( $objData->new_slug == '' ){
+            // no empty
+            $this->addMsgError('This field is required');
+        }
+        else {
+            // load category init (for after)
+            $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
+            $categoryInit = $objectManager->create('Magento\Catalog\Model\Category')->load($idCategory);
+            $redirectFrom = $this->_categoryUrlPathGenerator->getUrlPathWithSuffix($categoryInit, $categoryInit->getStoreId() );
+
+            // if custom url exists: remove
+            $categoryExpected = $categoryInit;
+            $categoryExpected->setUrlKey($objData->new_slug);
+            $redirectCheck = $this->_categoryUrlPathGenerator->getUrlPathWithSuffix($categoryExpected, $categoryExpected->getStoreId());
+            $this->_optmeredirections->deleteRedirectionByRequestPath($redirectCheck);
+
+            // save new url key
+            $categoryUpdated = $this->_optmeutils->saveObjField($idCategory, 'UrlKey', 'Category', $objData->new_slug, $this, 1);
+
+            if (!$categoryUpdated){
+                // no update
+            }
+            else {
+                if ( $categoryUpdated->getId() && $categoryUpdated->getId() != ''){
+
+                    // save url key ok : change url
+                    $this->returnAjax['url'] = $categoryUpdated->getUrl();
+                    $this->returnAjax['message'] = 'URL changed';
+                    $this->returnAjax['new_slug'] = $categoryUpdated->getUrlKey();
+
+                    // get redirects (from >> to)
+                    $redirectTo = $this->_categoryUrlPathGenerator->getUrlPathWithSuffix($categoryUpdated, $categoryUpdated->getStoreId());
+
+                    // add custom url rewrite
+                    $this->_optmeredirections->addRedirection($categoryUpdated->getId(), $redirectFrom, $redirectTo, $categoryUpdated->getStoreId());
+
+                }
+            }
+        }
     }
 
 

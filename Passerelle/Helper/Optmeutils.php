@@ -302,7 +302,7 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
 
         if ( !is_numeric($idProduct)){
             // need more data
-            $objAction->addMsgError('ID product missing');
+            $objAction->addMsgError('ID element missing');
         }
         elseif ( $isRequired == 1 && ($value == '' && $value !== 0)){
             // no empty
@@ -314,13 +314,13 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
         }
         else{
             // all is ok: try to save
-            // get product details
+            // get product/category details
             $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
             $product = $objectManager->create('Magento\Catalog\Model\\'. $type)->load($idProduct);
 
             /* @var \Magento\Catalog\Model\Product $product */
             if ($product->getId() == ''){
-                $objAction->addMsgError('Loading product failed', 1);
+                $objAction->addMsgError('Loading element failed', 1);
             }
             else {
                 // update if different
