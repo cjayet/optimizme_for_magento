@@ -2,6 +2,7 @@
 
 namespace Optimizmeformagento\Passerelle\Helper;
 use Braintree\Exception;
+use Firebase\JWT\JWT;
 
 /**
  * Class Data

@@ -1,0 +1,20 @@
+{
+  "name": "cjayet/optimizmeformagento",
+  "description": "Bridge with EasyContent",
+  "type": "magento2-module",
+  "version": "0.9.0",
+  "require": {
+    "php": "~5.5.0|~5.6.0|~7.0.0"
+  },
+  "authors": [
+    {
+      "name": "Clement Jayet",
+      "email": "c.jayet@optimiz.me",
+      "homepage": "https://optimiz.me/",
+      "role": "Developer"
+    }
+  ],
+  "autoload": {
+    "files": [ "registration.php" ]
+  }
+}

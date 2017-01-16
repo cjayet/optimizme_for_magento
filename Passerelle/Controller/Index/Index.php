@@ -1,7 +1,7 @@
 <?php
 namespace Optimizmeformagento\Passerelle\Controller\Index;
 use Magento\Framework\App\Action\Context;
-
+use Firebase\JWT\JWT;
 
 /**
  * Class Index
@@ -13,6 +13,7 @@ class Index extends \Magento\Framework\App\Action\Action
     protected $_optimizmeaction;
     protected $_optimizmeutils;
     protected $boolNoAction;
+    protected $_OPTIMIZME_JWT_SECRET;
 
     /**
      * Index constructor.
@@ -26,9 +27,9 @@ class Index extends \Magento\Framework\App\Action\Action
     {
         $this->_resultPageFactory = $resultPageFactory;
         $this->boolNoAction = 0;
+        $this->_OPTIMIZME_JWT_SECRET = '123456789';     // TODO dynamique
 
         parent::__construct($context);
-
     }
 
 
@@ -37,14 +38,35 @@ class Index extends \Magento\Framework\App\Action\Action
      */
     public function execute()
     {
+        header("Access-Control-Allow-Origin: *");
         // action
         $this->_optimizmeaction = $this->_objectManager->create('Optimizmeformagento\Passerelle\Helper\Optmeactions');
         $this->_optimizmeutils = $this->_objectManager->create('Optimizmeformagento\Passerelle\Helper\Optmeutils');
 
         if (isset($_REQUEST['data_optme']) && $_REQUEST['data_optme'] != '')
         {
-            // récupération des données
-            $dataOptimizme = json_decode(($_REQUEST['data_optme']));
+            // is valid request?
+            try {
+                $decoded = JWT::decode($_REQUEST['data_optme'], $this->_OPTIMIZME_JWT_SECRET, array('HS256'));
+            }
+            catch (\Firebase\JWT\SignatureInvalidException $e) {
+                $msg = 'Invalid token, security error: '. $e->getMessage();
+                $this->_optimizmeaction->setMsgReturn($msg, 'danger');
+                die;
+            }
+
+            if ($decoded == false){
+                // decoded error
+                $msg = 'Problem decoding JWT, security error';
+                $this->_optimizmeaction->setMsgReturn($msg, 'danger');
+
+                // ajax to return - encode data
+                $this->_optimizmeaction->setDataReturn($this->_optimizmeaction->returnAjax);
+                die;
+            }
+
+            // JWT ok, go on
+            $dataOptimizme =  $decoded;
 
             // post id
             $postId = '';
@@ -93,7 +115,6 @@ class Index extends \Magento\Framework\App\Action\Action
                     case 'set_category_name':           $this->_optimizmeaction->setCategoryName($postId, $dataOptimizme); break;
                     case 'set_category_description':    $this->_optimizmeaction->setCategoryDescription($postId, $dataOptimizme); break;
                     case 'set_category_slug':           $this->_optimizmeaction->updateCategorySlug($postId, $dataOptimizme); break;
-
 
                     // create content
                     // TODO magento
