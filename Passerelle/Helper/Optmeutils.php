@@ -359,4 +359,12 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
 
     }
 
+    /**
+     * @param int $length
+     * @return string
+     */
+    public function generateKeyForJwt($length=64){
+        $key = substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ceil($length/strlen($x)) )),1,$length);
+        return $key;
+    }
 }

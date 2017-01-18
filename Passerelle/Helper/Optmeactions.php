@@ -23,6 +23,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
     protected $_urlRewriteFactory;
     protected $_productUrlPathGenerator;
     protected $_categoryUrlPathGenerator;
+    protected $_user;
 
     /**
      * Optmeactions constructor.
@@ -38,6 +39,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\UrlRewrite\Model\UrlRewriteFactory $urlRewriteFactory,
         \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator $productUrlPathGenerator,
         \Magento\CatalogUrlRewrite\Model\CategoryUrlPathGenerator $categoryUrlPathGenerator,
+        \Magento\User\Model\User $user,
         \Optimizmeformagento\Passerelle\Helper\Optmeutils $optMeUtils,
         \Optimizmeformagento\Passerelle\Helper\Optmeredirections $optMeRedirections
     )
@@ -47,6 +49,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_urlRewriteFactory = $urlRewriteFactory;
         $this->_productUrlPathGenerator = $productUrlPathGenerator;
         $this->_categoryUrlPathGenerator = $categoryUrlPathGenerator;
+        $this->_user = $user;
         $this->_optmeutils = $optMeUtils;
         $this->_optmeredirections = $optMeRedirections;
 
@@ -423,10 +426,6 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
                     'name' => $category->getName(),
                     'description' => $category->getDescription(),
                     'slug' => $category->getUrlKey()
-                    /*,
-                    'publish' => $categoryLoop['active'],
-                    'id_shop' => $categoryLoop['id_shop'],
-                    'id_lang' => $categoryLoop['id_lang'],*/
                 );
 
                 array_push($tabResults, $categoryInfos);
@@ -479,8 +478,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * Change permalink of a post
-     * and add a redirection
-     * @param $idPost
+     * @param $idCategory
      * @param $objData
      */
     public function updateCategorySlug($idCategory, $objData){
@@ -531,16 +529,6 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         }
     }
 
-
-    /**
-     * Load false content
-     */
-    public function loadLoremIpsum(){
-        $nbParagraphes = rand(2,4);
-        $content = file_get_contents('http://loripsum.net/api/'.$nbParagraphes.'/short/decorate/');
-        $this->returnAjax['content'] = $content;
-    }
-
     /**
      * load list of custom redirections
      */
@@ -578,6 +566,52 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         else {
             $this->_optmeredirections->deleteRedirection($objData->id_redirection);
         }
+    }
+
+
+    ////////////////////////////////////////////////
+    //              SITE
+    ////////////////////////////////////////////////
+
+    /**
+     * Get secret key for JSON Web Signature
+     */
+    public function registerCMS($objData){
+
+         if ($this->_user->authenticate($objData->login, $objData->password)){
+             // auth ok! we can generate token
+             $keyJWT = $this->_optmeutils->generateKeyForJwt();
+             //Configuration::updateValue('OPTIMIZME_JWT_SECRET', $keyJWT);     // TODO save key
+
+             // all is ok
+             $this->returnAjax['message'] = 'JSON Token generated in Magento.';
+             $this->returnAjax['jws_token'] = $keyJWT;
+             $this->returnAjax['cms'] = 'magento';
+             $this->returnAjax['site_domain'] = $objData->url_cible;
+             $this->returnAjax['jwt_disable'] = 1;
+
+         }
+         else {
+             // error
+             array_push($this->tabErrors, 'Signon error. CMS not registered.');
+         }
+    }
+
+
+
+    ////////////////////////////////////////////////
+    //              UTILS
+    ////////////////////////////////////////////////
+
+
+
+    /**
+     * Load false content
+     */
+    public function loadLoremIpsum(){
+        $nbParagraphes = rand(2,4);
+        $content = file_get_contents('http://loripsum.net/api/'.$nbParagraphes.'/short/decorate/');
+        $this->returnAjax['content'] = $content;
     }
 
     /**

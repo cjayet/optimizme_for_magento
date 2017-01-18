@@ -2,6 +2,7 @@
 namespace Optimizmeformagento\Passerelle\Controller\Index;
 use Magento\Framework\App\Action\Context;
 use Firebase\JWT\JWT;
+use Optimizmeformagento\Passerelle\Helper\Optmeutils;
 
 /**
  * Class Index
@@ -27,7 +28,7 @@ class Index extends \Magento\Framework\App\Action\Action
     {
         $this->_resultPageFactory = $resultPageFactory;
         $this->boolNoAction = 0;
-        $this->_OPTIMIZME_JWT_SECRET = '123456789';     // TODO dynamique
+        $this->_OPTIMIZME_JWT_SECRET = 'LJk7mew4dpxqPN1ISOdyWYjyKu7ceXVxRJjDNiIEuQ2DZ3UrABTp4sazg8zLaH2C';     // TODO dynamique
 
         parent::__construct($context);
     }
@@ -39,6 +40,9 @@ class Index extends \Magento\Framework\App\Action\Action
     public function execute()
     {
         header("Access-Control-Allow-Origin: *");
+        //echo "passela"; die;
+
+
         // action
         $this->_optimizmeaction = $this->_objectManager->create('Optimizmeformagento\Passerelle\Helper\Optmeactions');
         $this->_optimizmeutils = $this->_objectManager->create('Optimizmeformagento\Passerelle\Helper\Optmeutils');
@@ -46,27 +50,30 @@ class Index extends \Magento\Framework\App\Action\Action
         if (isset($_REQUEST['data_optme']) && $_REQUEST['data_optme'] != '')
         {
             // is valid request?
-            try {
-                $decoded = JWT::decode($_REQUEST['data_optme'], $this->_OPTIMIZME_JWT_SECRET, array('HS256'));
+            if ( substr_count($_REQUEST['data_optme'], '.') == 2){
+
+                // JWT
+                try {
+                    // try decode JSON Web Token
+                    $decoded = JWT::decode($_REQUEST['data_optme'], $this->_OPTIMIZME_JWT_SECRET, array('HS256'));
+                    $dataOptimizme = $decoded;
+                } catch (\Firebase\JWT\SignatureInvalidException $e){
+                    $msg = 'JSON Web Token not decoded properly.';
+                    $this->_optimizmeaction->setMsgReturn($msg, 'danger');
+                    die;
+                }
             }
-            catch (\Firebase\JWT\SignatureInvalidException $e) {
-                $msg = 'Invalid token, security error: '. $e->getMessage();
-                $this->_optimizmeaction->setMsgReturn($msg, 'danger');
-                die;
+            else {
+
+                // simple JSON, only for "register_cms" action
+                $dataOptimizme = json_decode(stripslashes($_REQUEST['data_optme']));
+                if ( !is_object($dataOptimizme) || $dataOptimizme->action != 'register_cms'){
+                    $msg = 'JSON Web Token needed.';
+                    $this->_optimizmeaction->setMsgReturn($msg, 'danger');
+                    die;
+                }
             }
 
-            if ($decoded == false){
-                // decoded error
-                $msg = 'Problem decoding JWT, security error';
-                $this->_optimizmeaction->setMsgReturn($msg, 'danger');
-
-                // ajax to return - encode data
-                $this->_optimizmeaction->setDataReturn($this->_optimizmeaction->returnAjax);
-                die;
-            }
-
-            // JWT ok, go on
-            $dataOptimizme =  $decoded;
 
             // post id
             $postId = '';
@@ -89,6 +96,9 @@ class Index extends \Magento\Framework\App\Action\Action
             {
                 // action to do
                 switch ($dataOptimizme->action){
+
+                    // init dialog
+                    case 'register_cms':                $this->_optimizmeaction->registerCMS($dataOptimizme); break;
 
                     // post
                     case 'set_post_title' :             $this->_optimizmeaction->updateTitle($postId, $dataOptimizme); break;
