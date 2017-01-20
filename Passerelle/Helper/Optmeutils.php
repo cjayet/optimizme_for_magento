@@ -11,22 +11,37 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
     protected $_storeManager;
     protected $_wysiwygDirectory;
     protected $_directoryList;
+    protected $_resourceConfig;
+    protected $_scopeConfig;
+    protected $_cacheTypeList;
+    protected $_cacheFrontendPool;
 
     /**
      * Optmeutils constructor.
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Cms\Model\Wysiwyg\Config $wysiwyg
      * @param \Magento\Framework\App\Filesystem\DirectoryList $directory_list
+     * @param \Magento\Config\Model\ResourceModel\Config $resourceConfig
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      */
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Cms\Model\Wysiwyg\Config $wysiwyg,
-        \Magento\Framework\App\Filesystem\DirectoryList $directory_list
+        \Magento\Framework\App\Filesystem\DirectoryList $directory_list,
+        \Magento\Config\Model\ResourceModel\Config $resourceConfig,
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
+        \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList,
+        \Magento\Framework\App\Cache\Frontend\Pool $cacheFrontendPool
+
     )
     {
         $this->_storeManager = $storeManager;
         $this->_wysiwygDirectory = $wysiwyg::IMAGE_DIRECTORY;
         $this->_directoryList = $directory_list;
+        $this->_resourceConfig = $resourceConfig;
+        $this->_scopeConfig = $scopeConfig;
+        $this->_cacheTypeList = $cacheTypeList;
+        $this->_cacheFrontendPool = $cacheFrontendPool;
     }
 
 
@@ -36,15 +51,6 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function nice($s){
         echo '<pre>';print_r($s);echo'</pre>';
-    }
-
-    /**
-     * Affichage des derniers articles du blog
-     * @param $feed
-     * @param $nbElements
-     */
-    public function showNewsRss($feed, $nbElements){
-        // TODO
     }
 
     /**
@@ -333,13 +339,15 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
                     try {
                         $product->$setter($value);
                         $product->save();
+
+                        $objAction->returnAjax['message'] = 'Field saved';
+
                         return $product;
                     }
                     catch (Exception $e){
                         $objAction->addMsgError('Product not saved, '. $e->getMessage(), 1);
                     }
                 }
-
             }
         }
 
@@ -366,5 +374,51 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
     public function generateKeyForJwt($length=64){
         $key = substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ceil($length/strlen($x)) )),1,$length);
         return $key;
+    }
+
+    /**
+     * @param $keyJWT
+     */
+    public function saveJwtKey($keyJWT){
+        $this->_resourceConfig->saveConfig(
+            'optimizme/jwt/key',
+            $keyJWT,
+            'default',
+            0
+        );
+
+        // flush cache config to update key
+        $this->cacheConfigClean();
+    }
+
+    /**
+     *  Get saved JWT key
+     */
+    public function getJwtKey($cacheConfigClean=0){
+
+        $key = $this->_scopeConfig->getValue('optimizme/jwt/key', 'default', 0);
+        if (is_null($key))                  $key = '';
+
+        return $key;
+    }
+
+
+    /**
+     *  clean config cache
+     */
+    public function cacheConfigClean(){
+
+        try{
+            $types = array('config');
+            foreach ($types as $type) {
+                $this->_cacheTypeList->cleanType($type);
+            }
+            foreach ($this->_cacheFrontendPool as $cacheFrontend) {
+                $cacheFrontend->getBackend()->clean();
+            }
+        }
+        catch(Exception $e){
+            echo $msg = 'Error : '.$e->getMessage();
+        }
     }
 }

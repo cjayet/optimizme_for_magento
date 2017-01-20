@@ -25,6 +25,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
     protected $_categoryUrlPathGenerator;
     protected $_user;
 
+
     /**
      * Optmeactions constructor.
      * @param \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory
@@ -269,7 +270,9 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updatePostStatus($idPost, $objData){
-        if ( !isset($objData->is_publish) )         $objData->is_publish = 0;
+        if ( !isset($objData->is_publish) || $objData->is_publish == 0 )        $objData->is_publish = 0;
+        else                                                                    $objData->is_publish = 1;
+
         $this->_optmeutils->saveObjField($idPost, 'Status', 'Product', $objData->is_publish, $this, 1);
     }
 
@@ -581,7 +584,8 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
          if ($this->_user->authenticate($objData->login, $objData->password)){
              // auth ok! we can generate token
              $keyJWT = $this->_optmeutils->generateKeyForJwt();
-             //Configuration::updateValue('OPTIMIZME_JWT_SECRET', $keyJWT);     // TODO save key
+             $this->_optmeutils->saveJwtKey($keyJWT);
+
 
              // all is ok
              $this->returnAjax['message'] = 'JSON Token generated in Magento.';

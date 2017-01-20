@@ -2,7 +2,6 @@
 namespace Optimizmeformagento\Passerelle\Controller\Index;
 use Magento\Framework\App\Action\Context;
 use Firebase\JWT\JWT;
-use Optimizmeformagento\Passerelle\Helper\Optmeutils;
 
 /**
  * Class Index
@@ -13,7 +12,9 @@ class Index extends \Magento\Framework\App\Action\Action
     protected $_resultPageFactory;
     protected $_optimizmeaction;
     protected $_optimizmeutils;
-    protected $boolNoAction;
+    protected $_resourceConfig;
+
+    protected $_boolNoAction;
     protected $_OPTIMIZME_JWT_SECRET;
 
     /**
@@ -27,8 +28,8 @@ class Index extends \Magento\Framework\App\Action\Action
     )
     {
         $this->_resultPageFactory = $resultPageFactory;
-        $this->boolNoAction = 0;
-        $this->_OPTIMIZME_JWT_SECRET = 'LJk7mew4dpxqPN1ISOdyWYjyKu7ceXVxRJjDNiIEuQ2DZ3UrABTp4sazg8zLaH2C';     // TODO dynamique
+        $this->_boolNoAction = 0;
+        $this->_OPTIMIZME_JWT_SECRET = '';
 
         parent::__construct($context);
     }
@@ -39,9 +40,8 @@ class Index extends \Magento\Framework\App\Action\Action
      */
     public function execute()
     {
+        $time_pre = microtime(true);
         header("Access-Control-Allow-Origin: *");
-        //echo "passela"; die;
-
 
         // action
         $this->_optimizmeaction = $this->_objectManager->create('Optimizmeformagento\Passerelle\Helper\Optmeactions');
@@ -55,10 +55,11 @@ class Index extends \Magento\Framework\App\Action\Action
                 // JWT
                 try {
                     // try decode JSON Web Token
+                    $this->_OPTIMIZME_JWT_SECRET = $this->_optimizmeutils->getJwtKey();
                     $decoded = JWT::decode($_REQUEST['data_optme'], $this->_OPTIMIZME_JWT_SECRET, array('HS256'));
                     $dataOptimizme = $decoded;
                 } catch (\Firebase\JWT\SignatureInvalidException $e){
-                    $msg = 'JSON Web Token not decoded properly.';
+                    $msg = 'JSON Web Token not decoded properly: '. $e->getMessage();
                     $this->_optimizmeaction->setMsgReturn($msg, 'danger');
                     die;
                 }
@@ -73,7 +74,6 @@ class Index extends \Magento\Framework\App\Action\Action
                     die;
                 }
             }
-
 
             // post id
             $postId = '';
@@ -129,12 +129,16 @@ class Index extends \Magento\Framework\App\Action\Action
                     // create content
                     // TODO magento
 
-                    default:                            $this->boolNoAction = 1; break;
+                    default:                            $this->_boolNoAction = 1; break;
                 }
 
+                // calculate execution time
+                $time_post = microtime(true);
+                $exec_time = $time_post - $time_pre;
+                $this->_optimizmeaction->returnAjax['time'] = $exec_time;
 
                 // results of action
-                if ($this->boolNoAction == 1)
+                if ($this->_boolNoAction == 1)
                 {
                     // no action done
                     $msg = 'No action found.';

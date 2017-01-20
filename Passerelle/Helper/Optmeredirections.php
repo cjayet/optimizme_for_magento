@@ -38,8 +38,8 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
     function addRedirection($entityId, $oldUrl, $newUrl, $storeId){
 
         $result = '';
-        // add in database if necessary
 
+        // add in database if necessary
         if ($oldUrl != $newUrl){
             // check if url already exists
             $redirection = $this->getRedirectionByRequestPath($oldUrl);
@@ -51,7 +51,7 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
             }
             else {
                 // insert redirection
-                $urlRewriteModel = $this->_urlRewriteFactory->create()
+                $this->_urlRewriteFactory->create()
                     ->setEntityId($entityId)
                     ->setRequestPath($oldUrl)
                     ->setTargetPath($newUrl)
