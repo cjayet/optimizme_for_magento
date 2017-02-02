@@ -40,7 +40,6 @@ class Index extends \Magento\Framework\App\Action\Action
      */
     public function execute()
     {
-        $time_pre = microtime(true);
         header("Access-Control-Allow-Origin: *");
 
         // action
@@ -110,6 +109,7 @@ class Index extends \Magento\Framework\App\Action\Action
                     case 'set_post_status' :            $this->_optimizmeaction->updatePostStatus($postId, $dataOptimizme); break;
                     case 'set_post_imgattributes' :     $this->_optimizmeaction->updateAttributesTag($postId, $dataOptimizme, 'img'); break;
                     case 'set_post_hrefattributes' :    $this->_optimizmeaction->updateAttributesTag($postId, $dataOptimizme, 'a'); break;
+                    case 'set_post_reference' :         $this->_optimizmeaction->setReference($postId, $dataOptimizme); break;
 
                     // redirections
                     case 'load_redirections':           $this->_optimizmeaction->loadRedirections(); break;
@@ -117,11 +117,11 @@ class Index extends \Magento\Framework\App\Action\Action
 
                     // load content
                     case 'load_post_content' :          $this->_optimizmeaction->loadPostContent($postId); break;
-                    case 'load_posts_pages':            $this->_optimizmeaction->loadPostsPages($dataOptimizme); break;
+                    case 'load_posts_pages':            $this->_optimizmeaction->loadPostsPages(); break;
 
                     // categories
-                    case 'load_categories':             $this->_optimizmeaction->loadCategories($dataOptimizme); break;
-                    case 'load_category_content':       $this->_optimizmeaction->loadCategoryContent($postId, $dataOptimizme); break;
+                    case 'load_categories':             $this->_optimizmeaction->loadCategories(); break;
+                    case 'load_category_content':       $this->_optimizmeaction->loadCategoryContent($postId); break;
                     case 'set_category_name':           $this->_optimizmeaction->setCategoryName($postId, $dataOptimizme); break;
                     case 'set_category_description':    $this->_optimizmeaction->setCategoryDescription($postId, $dataOptimizme); break;
                     case 'set_category_slug':           $this->_optimizmeaction->updateCategorySlug($postId, $dataOptimizme); break;
@@ -131,11 +131,6 @@ class Index extends \Magento\Framework\App\Action\Action
 
                     default:                            $this->_boolNoAction = 1; break;
                 }
-
-                // calculate execution time
-                $time_post = microtime(true);
-                $exec_time = $time_post - $time_pre;
-                $this->_optimizmeaction->returnAjax['time'] = $exec_time;
 
                 // results of action
                 if ($this->_boolNoAction == 1)
@@ -162,7 +157,7 @@ class Index extends \Magento\Framework\App\Action\Action
                     else
                     {
                         // no error, OK !
-                        $msg = 'Modification effectuée avec succès.';
+                        $msg = 'Action done!';
                         $msg .= $this->_optimizmeutils->getListMessages($this->_optimizmeaction->tabSuccess);
                         $this->_optimizmeaction->setMsgReturn($msg);
                     }

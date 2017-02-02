@@ -1,5 +1,4 @@
 <?php
-
 namespace Optimizmeformagento\Passerelle\Helper;
 
 /**
@@ -72,7 +71,6 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
         return $result;
     }
 
-
     /**
      * @param $id
      */
@@ -82,7 +80,6 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
             $redirectionToDelete->delete();
         }
     }
-
 
     /**
      * @param $requestPath
@@ -107,11 +104,9 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
         return $magRedirections;
     }
 
-
-
     /**
      * @param string $statut
-     * @return \Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection
+     * @return array
      */
     public function getAllRedirections($statut='custom'){
 
@@ -125,7 +120,7 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * @param $oldUrl
-     * @return array|null|object|void
+     * @return mixed
      */
     public function getRedirectionByRequestPath($oldUrl){
 

@@ -1,5 +1,4 @@
 <?php
-
 namespace Optimizmeformagento\Passerelle\Helper;
 
 /**
@@ -90,7 +89,6 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
         <?php
     }
 
-
     /**
      * Check if media exists in media library (search by title)
      * @param $urlFile
@@ -118,7 +116,6 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
         }
     }
 
-
     /**
      * Add media in library
      * @param $urlFile : URL where to download and copy file
@@ -126,23 +123,23 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function addMediaInLibrary($urlFile){
 
-        $urlMedia = '';
         $uploaddir = $this->_directoryList->getPath('media') .'/'. $this->_wysiwygDirectory;
         $urldir = $this->_storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA ) .'/'. $this->_wysiwygDirectory;
 
         $nameFile = basename($urlFile);
         $uploadfile = $uploaddir .'/'. $nameFile;
 
+        if (strstr($urlFile, 'passerelle.dev'))
+            $urlFile = 'http://www.w3schools.com/css/img_fjords.jpg';       // TODO gérer en prod
+
         // write file in media
         try {
-            $contents = file_get_contents($urlFile);
-            $savefile = fopen($uploadfile, 'w');
-            fwrite($savefile, $contents);
-            fclose($savefile);
+            copy($urlFile, $uploadfile);
+
             $newUrl = $urldir .'/'. $nameFile;
             return $newUrl;
         }
-        catch (Exception $e){
+        catch (\Exception $e){
             return false;
         }
     }
@@ -176,72 +173,15 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Get meta description
-     * @param $post
-     * @return mixed
-     */
-    public function getMetaDescription($post){
-        // TODO
-    }
-
-
-    /**
-     * @param $type
-     * @return string
-     */
-    public function getPostMetaKeyFromType($type)
-    {
-        // TODO
-    }
-
-    /**
-     * @param $newMetaValue
-     * @param $idPost
-     * @param $metaKey
-     * @return bool
-     */
-    public function doUpdatePostMeta($newMetaValue, $idPost, $metaKey){
-        // TODO
-    }
-
-
-
-    /**
-     * Get canonical url
-     * @param string $post
-     * @return string
-     */
-    public function getCanonicalUrl($post=''){
-       // TODO
-    }
-
-    /**
-     * @param $post
-     * @return mixed
-     */
-    public function getMetaNoIndex($post){
-        // TODO
-    }
-
-    /**
-     * @param $post
-     * @return mixed
-     */
-    public function getMetaNoFollow($post){
-        // TODO
-    }
-
-
-    /**
      * Get Dom from html
      *  and add a "<span>" tag in top
      * @param $doc
      * @param $tag
      * @param $content
-     * @return DOMNodeList
+     * @return \DOMNodeList
      */
     public function getNodesInDom($doc, $tag, $content){
-
+        /* @var $doc \DOMDocument */
         // load post content in DOM
         libxml_use_internal_errors(true);
         $doc->loadHTML('<span>'.$content.'</span>');
@@ -260,6 +200,8 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      * @return string
      */
     public function getHtmlFromDom($doc){
+        /* @var $doc \DOMDocument */
+        /* @var $racine \DOMNode */
         $racine = $doc->getElementsByTagName('span')->item(0);
         $newContent = '';
         if ($racine->hasChildNodes()){
@@ -269,7 +211,6 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
         }
         return $newContent;
     }
-
 
     /**
      * Clean content before saving
@@ -285,7 +226,6 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
         return trim($content);
     }
 
-
     /**
      * @param $oldUrl
      * @param $newUrl
@@ -293,7 +233,6 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
     public function changeAllLinksInPostContent($oldUrl, $newUrl){
         // TODO
     }
-
 
     /**
      * @param $idProduct
@@ -305,6 +244,7 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      * @return bool|\Magento\Catalog\Model\Product
      */
     public function saveObjField($idProduct, $field, $type, $value, $objAction, $isRequired=0){
+        /* @var $objAction Optmeactions */
 
         if ( !is_numeric($idProduct)){
             // need more data
@@ -344,7 +284,7 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
 
                         return $product;
                     }
-                    catch (Exception $e){
+                    catch (\Exception $e){
                         $objAction->addMsgError('Product not saved, '. $e->getMessage(), 1);
                     }
                 }
@@ -354,9 +294,6 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
         // error somewhere
         return false;
     }
-
-
-
 
     /**
      * @param $idStore
@@ -394,14 +331,12 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      *  Get saved JWT key
      */
-    public function getJwtKey($cacheConfigClean=0){
+    public function getJwtKey(){
 
         $key = $this->_scopeConfig->getValue('optimizme/jwt/key', 'default', 0);
         if (is_null($key))                  $key = '';
-
         return $key;
     }
-
 
     /**
      *  clean config cache
@@ -417,7 +352,7 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
                 $cacheFrontend->getBackend()->clean();
             }
         }
-        catch(Exception $e){
+        catch(\Exception $e){
             echo $msg = 'Error : '.$e->getMessage();
         }
     }

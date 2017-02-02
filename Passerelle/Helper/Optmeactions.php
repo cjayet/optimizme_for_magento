@@ -1,14 +1,10 @@
 <?php
-
 namespace Optimizmeformagento\Passerelle\Helper;
-use Braintree\Exception;
-use Firebase\JWT\JWT;
 
 /**
  * Class Data
  * @package Optmizmeformagento\Passerelle\Helper
  */
-
 class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
 {
     public $returnResult;
@@ -75,6 +71,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateContent($idPost, $objData){
+        /* @var $node \DOMElement */
 
         if (!isset($objData->new_content))
         {
@@ -107,12 +104,6 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
                 {
                     // url media in easycontent
                     $urlFile = $node->getAttribute($attr);
-                    /*
-                    if(!(strpos($urlFile, 'http') === 0)){
-                        $urlFile = 'http://localhost'. $urlFile;        // TODO enlever localhost
-                        echo "URL SPOTTED"; die;
-                    }
-                    */
 
                     // check if is media and already in media library
                     if ($this->_optmeutils->isFileMedia($urlFile)){
@@ -162,6 +153,8 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateAttributesTag($idProduct, $objData, $tag){
+        /* @var $product \Magento\Catalog\Model\Product */
+        /* @var $node \DOMElement */
 
         $boolModified = 0;
         if ( !is_numeric($idProduct)){
@@ -246,9 +239,6 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_optmeutils->saveObjField($idPost, 'MetaTitle', 'Product', $objData->meta_title, $this);
     }
 
-
-
-
     /**
      * @param $idPost
      * @param $objData
@@ -283,6 +273,8 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateSlug($idPost, $objData){
+        /* @var $productInit \Magento\Catalog\Model\Product */
+        /* @var $productExpected \Magento\Catalog\Model\Product */
 
         if ( !is_numeric($idPost)){
             // need more data
@@ -329,6 +321,14 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         }
     }
 
+    /**
+     * Change reference for a product
+     * @param $idPost
+     * @param $objData
+     */
+    public function setReference($idPost, $objData){
+        $this->_optmeutils->saveObjField($idPost, 'Sku', 'Product', $objData->new_reference, $this, 1);
+    }
 
     /**
      * Return content from a post
@@ -337,10 +337,9 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function loadPostContent($idPost){
 
-        /* @var \Magento\Catalog\Model\Product $product */
+        /* @var $product \Magento\Catalog\Model\Product */
         // get product details
         $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
-        //$product = $objectManager->create('Magento\Catalog\Model\Product')->setStoreId(2)->load($idPost);
         $product = $objectManager->create('Magento\Catalog\Model\Product')->load($idPost);
 
         if ($product->getId() != ''){
@@ -354,6 +353,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
 
             // load and return product data
             $this->returnAjax['title'] = $product->getName();
+            $this->returnAjax['reference'] = $product->getSku();
             $this->returnAjax['short_description'] = $product->getShortDescription();
             $this->returnAjax['content'] = $product->getDescription();
             $this->returnAjax['slug'] = $product->getUrlKey();
@@ -361,9 +361,9 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             $this->returnAjax['publish'] = $product->getStatus();
             $this->returnAjax['meta_description'] = $product->getMetaDescription();
             $this->returnAjax['meta_title'] = $product->getMetaTitle();
-            $this->returnAjax['url_canonical'] = 'todo';                                // TODO gestion url canonique
-            $this->returnAjax['noindex'] = 'todo';                                      // TODO gestion noindex
-            $this->returnAjax['nofollow'] = 'todo';                                     // TODO gestion nofollow
+            $this->returnAjax['url_canonical'] = '';                                    // TODO gestion url canonique
+            $this->returnAjax['noindex'] = '';                                          // TODO gestion noindex
+            $this->returnAjax['nofollow'] = '';                                         // TODO gestion nofollow
             $this->returnAjax['blog_public'] = 1;
         }
     }
@@ -371,14 +371,15 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Load posts/pages
      */
-    public function loadPostsPages($objData){
+    public function loadPostsPages(){
+        /* @var $product \Magento\Catalog\Model\Product */
 
         $tabResults = array();
         $productsReturn = array();
 
         // récupération de la liste des produits
         $collection = $this->_productCollectionFactory->create();
-        $collection->setPageSize(10);    // TODO enlever la limite
+        $collection->setPageSize(10);    // TODO remove limit
         $products = $collection->getData();
 
         if (count($products)>0){
@@ -405,17 +406,21 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         $this->returnAjax['arborescence'] = $tabResults;
     }
 
+
+    ////////////////////////////////////////////////
+    //              CATEGORIES
+    ////////////////////////////////////////////////
+
     /**
-     * @param $objData
+     * Load categories list
      */
-    public function loadCategories($objData){
+    public function loadCategories(){
 
         /* @var $category \Magento\Catalog\Model\Category */
         $tabResults = array();
 
         // don't get root category
-        //$categories = Category::getCategories($langCategories, true, false, ' AND id_parent > 0 ');
-        $categories = $this->_categoryCollectionFactory->create()->getData(); //->getData();
+        $categories = $this->_categoryCollectionFactory->create()->getData();
 
         if (count($categories)>0) {
             foreach ($categories as $categoryLoop) {
@@ -440,9 +445,8 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * @param $elementId
-     * @param $objData
      */
-    public function loadCategoryContent($elementId, $objData){
+    public function loadCategoryContent($elementId){
         /* @var $category \Magento\Catalog\Model\Category */
         $tabCategory = array();
 
@@ -477,7 +481,6 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
     public function setCategoryDescription($idCategory, $objData){
         $this->_optmeutils->saveObjField($idCategory, 'Description', 'Category', $objData->description, $this);
     }
-
 
     /**
      * Change permalink of a post
@@ -531,6 +534,11 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             }
         }
     }
+
+
+    ////////////////////////////////////////////////
+    //              REDIRECTION
+    ////////////////////////////////////////////////
 
     /**
      * load list of custom redirections
@@ -602,12 +610,9 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
 
-
     ////////////////////////////////////////////////
     //              UTILS
     ////////////////////////////////////////////////
-
-
 
     /**
      * Load false content
