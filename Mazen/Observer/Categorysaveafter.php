@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimizmeformagento\Passerelle\Observer;
+namespace Optimizmeformagento\Mazen\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
 
@@ -10,6 +10,6 @@ class Categorysaveafter implements ObserverInterface
     {
         $category = $observer->getCategory();  // get category object
 
-        // TODO send back data to easycontent
+        // TODO send back data to MAZEN
     }
 }

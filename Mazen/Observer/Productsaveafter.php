@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimizmeformagento\Passerelle\Observer;
+namespace Optimizmeformagento\Mazen\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
 
@@ -10,6 +10,6 @@ class Productsaveafter implements ObserverInterface
     {
         $product = $observer->getProduct();  // get product object
 
-        // TODO send back data to easycontent
+        // TODO send back data to MAZEN
     }
 }

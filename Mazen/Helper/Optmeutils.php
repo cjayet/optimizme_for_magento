@@ -1,22 +1,22 @@
 <?php
-namespace Optimizmeformagento\Passerelle\Helper;
+namespace Optimizmeformagento\Mazen\Helper;
 
 /**
- * Class Optmeutils
- * @package Optimizmeformagento\Passerelle\Helper
+ * Class OptimizmeMazenUtils
+ * @package Optimizmeformagento\Mazen\Helper
  */
-class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
+class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
 {
-    protected $_storeManager;
-    protected $_wysiwygDirectory;
-    protected $_directoryList;
-    protected $_resourceConfig;
-    protected $_scopeConfig;
-    protected $_cacheTypeList;
-    protected $_cacheFrontendPool;
+    protected $storeManager;
+    protected $wysiwygDirectory;
+    protected $directoryList;
+    protected $resourceConfig;
+    protected $scopeConfig;
+    protected $cacheTypeList;
+    protected $cacheFrontendPool;
 
     /**
-     * Optmeutils constructor.
+     * OptimizmeMazenUtils constructor.
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Cms\Model\Wysiwyg\Config $wysiwyg
      * @param \Magento\Framework\App\Filesystem\DirectoryList $directory_list
@@ -34,13 +34,13 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
 
     )
     {
-        $this->_storeManager = $storeManager;
-        $this->_wysiwygDirectory = $wysiwyg::IMAGE_DIRECTORY;
-        $this->_directoryList = $directory_list;
-        $this->_resourceConfig = $resourceConfig;
-        $this->_scopeConfig = $scopeConfig;
-        $this->_cacheTypeList = $cacheTypeList;
-        $this->_cacheFrontendPool = $cacheFrontendPool;
+        $this->storeManager = $storeManager;
+        $this->wysiwygDirectory = $wysiwyg::IMAGE_DIRECTORY;
+        $this->directoryList = $directory_list;
+        $this->resourceConfig = $resourceConfig;
+        $this->scopeConfig = $scopeConfig;
+        $this->cacheTypeList = $cacheTypeList;
+        $this->cacheFrontendPool = $cacheFrontendPool;
     }
 
 
@@ -96,12 +96,12 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function isMediaInLibrary($urlFile){
 
-        $storeBaseUrl = $this->_storeManager->getStore()->getBaseUrl();
+        $storeBaseUrl = $this->storeManager->getStore()->getBaseUrl();
         if ( !stristr($urlFile, $storeBaseUrl) ){
 
             // different: copy to CMS
             $basenameFile = basename($urlFile);
-            $folder = $this->_storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA ) .'/'. $this->_wysiwygDirectory;
+            $folder = $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA ) .'/'. $this->wysiwygDirectory;
 
             if (file_exists($folder .'/'. $basenameFile)){
                 return $folder .'/'. $basenameFile;
@@ -123,8 +123,8 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function addMediaInLibrary($urlFile){
 
-        $uploaddir = $this->_directoryList->getPath('media') .'/'. $this->_wysiwygDirectory;
-        $urldir = $this->_storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA ) .'/'. $this->_wysiwygDirectory;
+        $uploaddir = $this->directoryList->getPath('media') .'/'. $this->wysiwygDirectory;
+        $urldir = $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA ) .'/'. $this->wysiwygDirectory;
 
         $nameFile = basename($urlFile);
         $uploadfile = $uploaddir .'/'. $nameFile;
@@ -217,8 +217,8 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $content
      * @return mixed
      */
-    public function cleanHtmlFromEasycontent($content){
-        $content = str_replace(' easyContentAddRow', '', $content);
+    public function cleanHtmlFromMazen($content){
+        $content = str_replace(' mazenAddRow', '', $content);
         $content = str_replace(' ui-droppable', '', $content);
         $content = str_replace('style=""', '', $content);
         $content = str_replace('class=""', '', $content);
@@ -244,7 +244,7 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      * @return bool|\Magento\Catalog\Model\Product
      */
     public function saveObjField($idProduct, $field, $type, $value, $objAction, $isRequired=0){
-        /* @var $objAction Optmeactions */
+        /* @var $objAction OptimizmeMazenActions */
 
         if ( !is_numeric($idProduct)){
             // need more data
@@ -300,7 +300,7 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      * @return mixed
      */
     public function getStoreBaseUrl($idStore){
-        return $this->_storeManager->getStore($idStore)->getBaseUrl();
+        return $this->storeManager->getStore($idStore)->getBaseUrl();
 
     }
 
@@ -317,7 +317,7 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $keyJWT
      */
     public function saveJwtKey($keyJWT){
-        $this->_resourceConfig->saveConfig(
+        $this->resourceConfig->saveConfig(
             'optimizme/jwt/key',
             $keyJWT,
             'default',
@@ -333,7 +333,7 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getJwtKey(){
 
-        $key = $this->_scopeConfig->getValue('optimizme/jwt/key', 'default', 0);
+        $key = $this->scopeConfig->getValue('optimizme/jwt/key', 'default', 0);
         if (is_null($key))                  $key = '';
         return $key;
     }
@@ -346,9 +346,9 @@ class Optmeutils extends \Magento\Framework\App\Helper\AbstractHelper
         try{
             $types = array('config');
             foreach ($types as $type) {
-                $this->_cacheTypeList->cleanType($type);
+                $this->cacheTypeList->cleanType($type);
             }
-            foreach ($this->_cacheFrontendPool as $cacheFrontend) {
+            foreach ($this->cacheFrontendPool as $cacheFrontend) {
                 $cacheFrontend->getBackend()->clean();
             }
         }

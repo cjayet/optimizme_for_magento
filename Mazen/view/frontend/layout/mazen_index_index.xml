@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<sequence>
+    <module name="Magento_Catalog"/>
+</sequence>
+<layout xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/layout_generic.xsd">
+    <referenceBlock name="admin.product.options">
+        <arguments>
+            <argument name="template" xsd:type="string">Optimizmeformagento_Mazen::product_options.phtml</argument>
+        </arguments>
+    </referenceBlock>
+</layout>

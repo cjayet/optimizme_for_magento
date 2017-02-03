@@ -1,15 +1,14 @@
 <?php
-namespace Optimizmeformagento\Passerelle\Block;
+namespace Optimizmeformagento\Mazen\Block;
 
 class Index extends \Magento\Framework\View\Element\Template
 {
     protected $_productCollectionFactory;
 
     /**
-     * Productslist constructor.
+     * Index constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
      * @param \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory
-     * @param \Optimizmeformagento\Passerelle\Helper\Optmeutils $OptMeUtils
      * @param array $data
      */
     public function __construct(

@@ -1,35 +1,35 @@
 <?php
-namespace Optimizmeformagento\Passerelle\Helper;
+namespace Optimizmeformagento\Mazen\Helper;
 
 /**
- * Class Optmeredirections
- * @package Optimizmeformagento\Passerelle\Helper
+ * Class OptimizmeMazenRedirections
+ * @package Optimizmeformagento\Mazen\Helper
  */
-class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
+class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractHelper
 {
-    protected $_storeManager;
-    protected $_urlRewriteFactory;
-    protected $_urlRewrite;
-    protected $_optmeutils;
+    protected $storeManager;
+    protected $urlRewriteFactory;
+    protected $urlRewrite;
+    protected $optimizmeMazenUtils;
 
     /**
-     * Optmeredirections constructor.
+     * OptimizmeMazenRedirections constructor.
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\UrlRewrite\Model\UrlRewriteFactory $urlRewriteFactory
      * @param \Magento\UrlRewrite\Model\UrlRewrite $urlRewrite
-     * @param Optmeutils $optMeUtils
+     * @param OptimizmeMazenUtils $OptimizmeMazenUtils
      */
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\UrlRewrite\Model\UrlRewriteFactory $urlRewriteFactory,
         \Magento\UrlRewrite\Model\UrlRewrite $urlRewrite,
-        \Optimizmeformagento\Passerelle\Helper\Optmeutils $optMeUtils
+        \Optimizmeformagento\Mazen\Helper\OptimizmeMazenUtils $OptimizmeMazenUtils
     )
     {
-        $this->_storeManager = $storeManager;
-        $this->_urlRewriteFactory = $urlRewriteFactory;
-        $this->_urlRewrite = $urlRewrite;
-        $this->_optmeutils = $optMeUtils;
+        $this->storeManager = $storeManager;
+        $this->urlRewriteFactory = $urlRewriteFactory;
+        $this->urlRewrite = $urlRewrite;
+        $this->optimizmeMazenUtils = $OptimizmeMazenUtils;
     }
 
 
@@ -44,13 +44,13 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
             $redirection = $this->getRedirectionByRequestPath($oldUrl);
             if (is_array($redirection) && count($redirection)>0){
                 // update
-                $urlRewrite = $this->_urlRewrite->load($redirection['url_rewrite_id']);
+                $urlRewrite = $this->urlRewrite->load($redirection['url_rewrite_id']);
                 $urlRewrite->setTargetPath($newUrl);
                 $urlRewrite->save();
             }
             else {
                 // insert redirection
-                $this->_urlRewriteFactory->create()
+                $this->urlRewriteFactory->create()
                     ->setEntityId($entityId)
                     ->setRequestPath($oldUrl)
                     ->setTargetPath($newUrl)
@@ -61,7 +61,7 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
             }
 
             // change all links in post_content
-            $this->_optmeutils->changeAllLinksInPostContent($oldUrl, $newUrl);
+            $this->optimizmeMazenUtils->changeAllLinksInPostContent($oldUrl, $newUrl);
 
         }
         else {
@@ -75,7 +75,7 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $id
      */
     public function deleteRedirection($id){
-        $redirectionToDelete = $this->_urlRewrite->load($id);
+        $redirectionToDelete = $this->urlRewrite->load($id);
         if ($redirectionToDelete->getId() && is_numeric($redirectionToDelete->getId())){
             $redirectionToDelete->delete();
         }
@@ -87,14 +87,14 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function deleteRedirectionByRequestPath($requestPath){
 
-        $magRedirections = $this->_urlRewriteFactory->create()
+        $magRedirections = $this->urlRewriteFactory->create()
             ->getCollection()
             ->addFieldToFilter('request_path', $requestPath)
             ->getData();
 
         if (is_array($magRedirections) && count($magRedirections)>0){
             foreach ($magRedirections as $magRedirection){
-                $customUrl = $this->_urlRewriteFactory->create()->load($magRedirection['url_rewrite_id']);
+                $customUrl = $this->urlRewriteFactory->create()->load($magRedirection['url_rewrite_id']);
                 if ($customUrl && $customUrl->getId()){
                     $customUrl->delete();
                 }
@@ -110,7 +110,7 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getAllRedirections($statut='custom'){
 
-        $magRedirections = $this->_urlRewriteFactory->create()
+        $magRedirections = $this->urlRewriteFactory->create()
             ->getCollection()
             ->addFieldToFilter('entity_type', $statut)
             ->getData();
@@ -124,7 +124,7 @@ class Optmeredirections extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getRedirectionByRequestPath($oldUrl){
 
-        $magRedirections = $this->_urlRewriteFactory->create()
+        $magRedirections = $this->urlRewriteFactory->create()
             ->getCollection()
             ->addFieldToFilter('entity_type', 'custom')
             ->addFieldToFilter('request_path', $oldUrl)

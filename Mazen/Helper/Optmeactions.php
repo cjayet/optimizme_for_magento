@@ -1,34 +1,34 @@
 <?php
-namespace Optimizmeformagento\Passerelle\Helper;
+namespace Optimizmeformagento\Mazen\Helper;
 
 /**
- * Class Data
- * @package Optmizmeformagento\Passerelle\Helper
+ * Class OptimizmeMazenActions
+ * @package Optimizmeformagento\Mazen\Helper
  */
-class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
+class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
 {
     public $returnResult;
     public $tabErrors;
     public $tabSuccess;
     public $returnAjax;
 
-    protected $_productCollectionFactory;
-    protected $_categoryCollectionFactory;
-    protected $_optmeutils;
-    protected $_optmeredirections;
-    protected $_urlRewriteFactory;
-    protected $_productUrlPathGenerator;
-    protected $_categoryUrlPathGenerator;
-    protected $_user;
+    protected $productCollectionFactory;
+    protected $categoryCollectionFactory;
+    protected $urlRewriteFactory;
+    protected $productUrlPathGenerator;
+    protected $categoryUrlPathGenerator;
+    protected $user;
+    protected $optimizmeMazenUtils;
+    protected $optimizmeMazenRedirections;
 
 
     /**
-     * Optmeactions constructor.
+     * OptimizmeMazenActions constructor.
      * @param \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory
      * @param \Magento\UrlRewrite\Model\UrlRewriteFactory $urlRewriteFactory
      * @param \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator $productUrlPathGenerator
-     * @param Optmeutils $optMeUtils
-     * @param Optmeredirections $optMeRedirections
+     * @param OptimizmeMazenUtils $OptimizmeMazenUtils
+     * @param OptimizmeMazenRedirections $OptimizmeMazenRedirections
      */
     public function __construct(
         \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory,
@@ -37,18 +37,18 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator $productUrlPathGenerator,
         \Magento\CatalogUrlRewrite\Model\CategoryUrlPathGenerator $categoryUrlPathGenerator,
         \Magento\User\Model\User $user,
-        \Optimizmeformagento\Passerelle\Helper\Optmeutils $optMeUtils,
-        \Optimizmeformagento\Passerelle\Helper\Optmeredirections $optMeRedirections
+        \Optimizmeformagento\Mazen\Helper\OptimizmeMazenUtils $OptimizmeMazenUtils,
+        \Optimizmeformagento\Mazen\Helper\OptimizmeMazenRedirections $OptimizmeMazenRedirections
     )
     {
-        $this->_productCollectionFactory = $productCollectionFactory;
-        $this->_categoryCollectionFactory = $categoryCollectionFactory;
-        $this->_urlRewriteFactory = $urlRewriteFactory;
-        $this->_productUrlPathGenerator = $productUrlPathGenerator;
-        $this->_categoryUrlPathGenerator = $categoryUrlPathGenerator;
-        $this->_user = $user;
-        $this->_optmeutils = $optMeUtils;
-        $this->_optmeredirections = $optMeRedirections;
+        $this->productCollectionFactory = $productCollectionFactory;
+        $this->categoryCollectionFactory = $categoryCollectionFactory;
+        $this->urlRewriteFactory = $urlRewriteFactory;
+        $this->productUrlPathGenerator = $productUrlPathGenerator;
+        $this->categoryUrlPathGenerator = $categoryUrlPathGenerator;
+        $this->user = $user;
+        $this->optimizmeMazenUtils = $OptimizmeMazenUtils;
+        $this->optimizmeMazenRedirections = $OptimizmeMazenRedirections;
 
         // tab messages and returns
         $this->returnResult = array();
@@ -63,7 +63,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateTitle($idPost, $objData){
-        $this->_optmeutils->saveObjField($idPost, 'Name', 'Product', $objData->new_title, $this, 1);
+        $this->optimizmeMazenUtils->saveObjField($idPost, 'Name', 'Product', $objData->new_title, $this, 1);
     }
 
     /**
@@ -102,14 +102,14 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             {
                 foreach ($xp->query('//'.$tag) as $node)
                 {
-                    // url media in easycontent
+                    // url media in MAZEN
                     $urlFile = $node->getAttribute($attr);
 
                     // check if is media and already in media library
-                    if ($this->_optmeutils->isFileMedia($urlFile)){
-                        $urlMediaCMS = $this->_optmeutils->isMediaInLibrary($urlFile);
+                    if ($this->optimizmeMazenUtils->isFileMedia($urlFile)){
+                        $urlMediaCMS = $this->optimizmeMazenUtils->isMediaInLibrary($urlFile);
                         if (!$urlMediaCMS){
-                            $resAddImage = $this->_optmeutils->addMediaInLibrary($urlFile);
+                            $resAddImage = $this->optimizmeMazenUtils->addMediaInLibrary($urlFile);
                             if ( !$resAddImage ){
                                 $this->addMsgError("Error copying img file", 1);
                             }
@@ -126,11 +126,11 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             }
 
             // span racine to enlever
-            $newContent = $this->_optmeutils->getHtmlFromDom($doc);
-            $newContent = $this->_optmeutils->cleanHtmlFromEasycontent($newContent);
+            $newContent = $this->optimizmeMazenUtils->getHtmlFromDom($doc);
+            $newContent = $this->optimizmeMazenUtils->cleanHtmlFromMazen($newContent);
 
             // save product content
-            $this->_optmeutils->saveObjField($idPost, 'Description', 'Product', $newContent, $this);
+            $this->optimizmeMazenUtils->saveObjField($idPost, 'Description', 'Product', $newContent, $this);
 
             if (count($this->tabErrors) == 0){
                 $this->returnAjax['message'] = 'Contenu enregistré avec succès';
@@ -145,7 +145,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateShortDescription($idPost, $objData){
-        $this->_optmeutils->saveObjField($idPost, 'ShortDescription', 'Product', $objData->new_short_description, $this);
+        $this->optimizmeMazenUtils->saveObjField($idPost, 'ShortDescription', 'Product', $objData->new_short_description, $this);
     }
 
     /**
@@ -175,7 +175,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             {
                 // load nodes
                 $doc = new \DOMDocument;
-                $nodes = $this->_optmeutils->getNodesInDom($doc, $tag, $product->getDescription());
+                $nodes = $this->optimizmeMazenUtils->getNodesInDom($doc, $tag, $product->getDescription());
                 if ($nodes->length > 0) {
                     foreach ($nodes as $node) {
 
@@ -209,10 +209,10 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
                 if ($boolModified == 1){
                     // action done: save new content
                     // span racine to enlever
-                    $newContent = $this->_optmeutils->getHtmlFromDom($doc);
+                    $newContent = $this->optimizmeMazenUtils->getHtmlFromDom($doc);
 
                     // update
-                    $this->_optmeutils->saveObjField($idProduct, 'Description', 'Product', $newContent, $this);
+                    $this->optimizmeMazenUtils->saveObjField($idProduct, 'Description', 'Product', $newContent, $this);
 
                 }
                 else {
@@ -228,7 +228,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateMetaDescription($idPost, $objData){
-        $this->_optmeutils->saveObjField($idPost, 'MetaDescription', 'Product', $objData->meta_description, $this);
+        $this->optimizmeMazenUtils->saveObjField($idPost, 'MetaDescription', 'Product', $objData->meta_description, $this);
     }
 
     /**
@@ -236,7 +236,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function updateMetaTitle($idPost, $objData){
-        $this->_optmeutils->saveObjField($idPost, 'MetaTitle', 'Product', $objData->meta_title, $this);
+        $this->optimizmeMazenUtils->saveObjField($idPost, 'MetaTitle', 'Product', $objData->meta_title, $this);
     }
 
     /**
@@ -263,7 +263,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         if ( !isset($objData->is_publish) || $objData->is_publish == 0 )        $objData->is_publish = 0;
         else                                                                    $objData->is_publish = 1;
 
-        $this->_optmeutils->saveObjField($idPost, 'Status', 'Product', $objData->is_publish, $this, 1);
+        $this->optimizmeMazenUtils->saveObjField($idPost, 'Status', 'Product', $objData->is_publish, $this, 1);
     }
 
     /**
@@ -288,16 +288,16 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             // load product init (for after)
             $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
             $productInit = $objectManager->create('Magento\Catalog\Model\Product')->load($idPost);
-            $redirectFrom = $this->_productUrlPathGenerator->getUrlPathWithSuffix($productInit, $productInit->getStoreId());
+            $redirectFrom = $this->productUrlPathGenerator->getUrlPathWithSuffix($productInit, $productInit->getStoreId());
 
             // if custom url exists: remove
             $productExpected = $productInit;
             $productExpected->setUrlKey($objData->new_slug);
-            $redirectCheck = $this->_productUrlPathGenerator->getUrlPathWithSuffix($productExpected, $productExpected->getStoreId());
-            $this->_optmeredirections->deleteRedirectionByRequestPath($redirectCheck);
+            $redirectCheck = $this->productUrlPathGenerator->getUrlPathWithSuffix($productExpected, $productExpected->getStoreId());
+            $this->optimizmeMazenRedirections->deleteRedirectionByRequestPath($redirectCheck);
 
             // save new url key
-            $productUpdated = $this->_optmeutils->saveObjField($idPost, 'UrlKey', 'Product', $objData->new_slug, $this, 1);
+            $productUpdated = $this->optimizmeMazenUtils->saveObjField($idPost, 'UrlKey', 'Product', $objData->new_slug, $this, 1);
 
             if (!$productUpdated){
                 // no update
@@ -311,10 +311,10 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
                     $this->returnAjax['new_slug'] = $productUpdated->getUrlKey();
 
                     // get redirects (from >> to)
-                    $redirectTo = $this->_productUrlPathGenerator->getUrlPathWithSuffix($productUpdated, $productUpdated->getStoreId());
+                    $redirectTo = $this->productUrlPathGenerator->getUrlPathWithSuffix($productUpdated, $productUpdated->getStoreId());
 
                     // add custom url rewrite
-                    $this->_optmeredirections->addRedirection($productUpdated->getId(), $redirectFrom, $redirectTo, $productUpdated->getStoreId());
+                    $this->optimizmeMazenRedirections->addRedirection($productUpdated->getId(), $redirectFrom, $redirectTo, $productUpdated->getStoreId());
 
                 }
             }
@@ -327,7 +327,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function setReference($idPost, $objData){
-        $this->_optmeutils->saveObjField($idPost, 'Sku', 'Product', $objData->new_reference, $this, 1);
+        $this->optimizmeMazenUtils->saveObjField($idPost, 'Sku', 'Product', $objData->new_reference, $this, 1);
     }
 
     /**
@@ -378,7 +378,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         $productsReturn = array();
 
         // récupération de la liste des produits
-        $collection = $this->_productCollectionFactory->create();
+        $collection = $this->productCollectionFactory->create();
         $collection->setPageSize(10);    // TODO remove limit
         $products = $collection->getData();
 
@@ -420,7 +420,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
         $tabResults = array();
 
         // don't get root category
-        $categories = $this->_categoryCollectionFactory->create()->getData();
+        $categories = $this->categoryCollectionFactory->create()->getData();
 
         if (count($categories)>0) {
             foreach ($categories as $categoryLoop) {
@@ -471,7 +471,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function setCategoryName($idCategory, $objData){
-        $this->_optmeutils->saveObjField($idCategory, 'Name', 'Category', $objData->new_name, $this);
+        $this->optimizmeMazenUtils->saveObjField($idCategory, 'Name', 'Category', $objData->new_name, $this);
     }
 
     /**
@@ -479,7 +479,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $objData
      */
     public function setCategoryDescription($idCategory, $objData){
-        $this->_optmeutils->saveObjField($idCategory, 'Description', 'Category', $objData->description, $this);
+        $this->optimizmeMazenUtils->saveObjField($idCategory, 'Description', 'Category', $objData->description, $this);
     }
 
     /**
@@ -502,16 +502,16 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             // load category init (for after)
             $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
             $categoryInit = $objectManager->create('Magento\Catalog\Model\Category')->load($idCategory);
-            $redirectFrom = $this->_categoryUrlPathGenerator->getUrlPathWithSuffix($categoryInit, $categoryInit->getStoreId() );
+            $redirectFrom = $this->categoryUrlPathGenerator->getUrlPathWithSuffix($categoryInit, $categoryInit->getStoreId() );
 
             // if custom url exists: remove
             $categoryExpected = $categoryInit;
             $categoryExpected->setUrlKey($objData->new_slug);
-            $redirectCheck = $this->_categoryUrlPathGenerator->getUrlPathWithSuffix($categoryExpected, $categoryExpected->getStoreId());
-            $this->_optmeredirections->deleteRedirectionByRequestPath($redirectCheck);
+            $redirectCheck = $this->categoryUrlPathGenerator->getUrlPathWithSuffix($categoryExpected, $categoryExpected->getStoreId());
+            $this->optimizmeMazenRedirections->deleteRedirectionByRequestPath($redirectCheck);
 
             // save new url key
-            $categoryUpdated = $this->_optmeutils->saveObjField($idCategory, 'UrlKey', 'Category', $objData->new_slug, $this, 1);
+            $categoryUpdated = $this->optimizmeMazenUtils->saveObjField($idCategory, 'UrlKey', 'Category', $objData->new_slug, $this, 1);
 
             if (!$categoryUpdated){
                 // no update
@@ -525,10 +525,10 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
                     $this->returnAjax['new_slug'] = $categoryUpdated->getUrlKey();
 
                     // get redirects (from >> to)
-                    $redirectTo = $this->_categoryUrlPathGenerator->getUrlPathWithSuffix($categoryUpdated, $categoryUpdated->getStoreId());
+                    $redirectTo = $this->categoryUrlPathGenerator->getUrlPathWithSuffix($categoryUpdated, $categoryUpdated->getStoreId());
 
                     // add custom url rewrite
-                    $this->_optmeredirections->addRedirection($categoryUpdated->getId(), $redirectFrom, $redirectTo, $categoryUpdated->getStoreId());
+                    $this->optimizmeMazenRedirections->addRedirection($categoryUpdated->getId(), $redirectFrom, $redirectTo, $categoryUpdated->getStoreId());
 
                 }
             }
@@ -546,14 +546,14 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
     public function loadRedirections(){
 
         $tabResults = array();
-        $magRedirections = $this->_optmeredirections->getAllRedirections();
+        $magRedirections = $this->optimizmeMazenRedirections->getAllRedirections();
 
         if (is_array($magRedirections) && count($magRedirections)>0){
 
             foreach ($magRedirections as $redirection){
 
                 // get store base url for this url rewrite (depending from store id)
-                $storeBaseUrl = $this->_optmeutils->getStoreBaseUrl($redirection['store_id']);
+                $storeBaseUrl = $this->optimizmeMazenUtils->getStoreBaseUrl($redirection['store_id']);
 
                 array_push($tabResults, array(
                     'id' => $redirection['url_rewrite_id'],
@@ -575,7 +575,7 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
             array_push($this->tabErrors, __('Redirection non trouvée', 'optimizme'));
         }
         else {
-            $this->_optmeredirections->deleteRedirection($objData->id_redirection);
+            $this->optimizmeMazenRedirections->deleteRedirection($objData->id_redirection);
         }
     }
 
@@ -589,24 +589,24 @@ class Optmeactions extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function registerCMS($objData){
 
-         if ($this->_user->authenticate($objData->login, $objData->password)){
-             // auth ok! we can generate token
-             $keyJWT = $this->_optmeutils->generateKeyForJwt();
-             $this->_optmeutils->saveJwtKey($keyJWT);
+        if ($this->user->authenticate($objData->login, $objData->password)){
+            // auth ok! we can generate token
+            $keyJWT = $this->optimizmeMazenUtils->generateKeyForJwt();
+            $this->optimizmeMazenUtils->saveJwtKey($keyJWT);
 
 
-             // all is ok
-             $this->returnAjax['message'] = 'JSON Token generated in Magento.';
-             $this->returnAjax['jws_token'] = $keyJWT;
-             $this->returnAjax['cms'] = 'magento';
-             $this->returnAjax['site_domain'] = $objData->url_cible;
-             $this->returnAjax['jwt_disable'] = 1;
+            // all is ok
+            $this->returnAjax['message'] = 'JSON Token generated in Magento.';
+            $this->returnAjax['jws_token'] = $keyJWT;
+            $this->returnAjax['cms'] = 'magento';
+            $this->returnAjax['site_domain'] = $objData->url_cible;
+            $this->returnAjax['jwt_disable'] = 1;
 
-         }
-         else {
-             // error
-             array_push($this->tabErrors, 'Signon error. CMS not registered.');
-         }
+        }
+        else {
+            // error
+            array_push($this->tabErrors, 'Signon error. CMS not registered.');
+        }
     }
 
 
