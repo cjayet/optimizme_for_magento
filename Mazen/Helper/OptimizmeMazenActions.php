@@ -27,8 +27,8 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory
      * @param \Magento\UrlRewrite\Model\UrlRewriteFactory $urlRewriteFactory
      * @param \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator $productUrlPathGenerator
-     * @param OptimizmeMazenUtils $OptimizmeMazenUtils
-     * @param OptimizmeMazenRedirections $OptimizmeMazenRedirections
+     * @param OptimizmeMazenUtils $optimizmeMazenUtils
+     * @param OptimizmeMazenRedirections $optimizmeMazenRedirections
      */
     public function __construct(
         \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory,
@@ -37,8 +37,8 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator $productUrlPathGenerator,
         \Magento\CatalogUrlRewrite\Model\CategoryUrlPathGenerator $categoryUrlPathGenerator,
         \Magento\User\Model\User $user,
-        \Optimizmeformagento\Mazen\Helper\OptimizmeMazenUtils $OptimizmeMazenUtils,
-        \Optimizmeformagento\Mazen\Helper\OptimizmeMazenRedirections $OptimizmeMazenRedirections
+        \Optimizmeformagento\Mazen\Helper\OptimizmeMazenUtils $optimizmeMazenUtils,
+        \Optimizmeformagento\Mazen\Helper\OptimizmeMazenRedirections $optimizmeMazenRedirections
     )
     {
         $this->productCollectionFactory = $productCollectionFactory;
@@ -47,8 +47,8 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
         $this->productUrlPathGenerator = $productUrlPathGenerator;
         $this->categoryUrlPathGenerator = $categoryUrlPathGenerator;
         $this->user = $user;
-        $this->optimizmeMazenUtils = $OptimizmeMazenUtils;
-        $this->optimizmeMazenRedirections = $OptimizmeMazenRedirections;
+        $this->optimizmeMazenUtils = $optimizmeMazenUtils;
+        $this->optimizmeMazenRedirections = $optimizmeMazenRedirections;
 
         // tab messages and returns
         $this->returnResult = array();
@@ -133,7 +133,7 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
             $this->optimizmeMazenUtils->saveObjField($idPost, 'Description', 'Product', $newContent, $this);
 
             if (count($this->tabErrors) == 0){
-                $this->returnAjax['message'] = 'Contenu enregistré avec succès';
+                $this->returnAjax['message'] = 'Content saved successfully!';
                 $this->returnAjax['id_post'] = $idPost;
                 $this->returnAjax['content'] = $newContent;
             }
@@ -149,8 +149,9 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param $idPost
+     * @param $idProduct
      * @param $objData
+     * @param $tag
      */
     public function updateAttributesTag($idProduct, $objData, $tag){
         /* @var $product \Magento\Catalog\Model\Product */

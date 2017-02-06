@@ -1,5 +1,6 @@
 <?php
 namespace Optimizmeformagento\Mazen\Controller\Index;
+
 use Magento\Framework\App\Action\Context;
 use Firebase\JWT\JWT;
 
@@ -31,6 +32,7 @@ class Index extends \Magento\Framework\App\Action\Action
         $this->boolNoAction = 0;
         $this->OPTIMIZME_MAZEN_JWT_SECRET = '';
 
+
         parent::__construct($context);
     }
 
@@ -42,8 +44,6 @@ class Index extends \Magento\Framework\App\Action\Action
     {
         header("Access-Control-Allow-Origin: *");
 
-        //echo "dans execute"; die;
-        // action
         $this->optimizmeaction = $this->_objectManager->create('Optimizmeformagento\Mazen\Helper\OptimizmeMazenActions');
         $this->optimizmeutils = $this->_objectManager->create('Optimizmeformagento\Mazen\Helper\OptimizmeMazenUtils');
 
@@ -169,7 +169,6 @@ class Index extends \Magento\Framework\App\Action\Action
             // stop script - no need to go further
             die;
         }
-
 
         $resultPage = $this->resultPageFactory->create();
         return $resultPage;

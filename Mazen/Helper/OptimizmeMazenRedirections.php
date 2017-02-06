@@ -17,19 +17,19 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\UrlRewrite\Model\UrlRewriteFactory $urlRewriteFactory
      * @param \Magento\UrlRewrite\Model\UrlRewrite $urlRewrite
-     * @param OptimizmeMazenUtils $OptimizmeMazenUtils
+     * @param OptimizmeMazenUtils $optimizmeMazenUtils
      */
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\UrlRewrite\Model\UrlRewriteFactory $urlRewriteFactory,
         \Magento\UrlRewrite\Model\UrlRewrite $urlRewrite,
-        \Optimizmeformagento\Mazen\Helper\OptimizmeMazenUtils $OptimizmeMazenUtils
+        \Optimizmeformagento\Mazen\Helper\OptimizmeMazenUtils $optimizmeMazenUtils
     )
     {
         $this->storeManager = $storeManager;
         $this->urlRewriteFactory = $urlRewriteFactory;
         $this->urlRewrite = $urlRewrite;
-        $this->optimizmeMazenUtils = $OptimizmeMazenUtils;
+        $this->optimizmeMazenUtils = $optimizmeMazenUtils;
     }
 
 
