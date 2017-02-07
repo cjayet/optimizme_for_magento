@@ -101,14 +101,14 @@ class Index extends \Magento\Framework\App\Action\Action
                     case 'register_cms':                $this->optimizmeaction->registerCMS($dataOptimizme); break;
 
                     // post
-                    case 'set_post_title' :             $this->optimizmeaction->updateTitle($postId, $dataOptimizme); break;
-                    case 'set_post_content' :           $this->optimizmeaction->updateContent($postId, $dataOptimizme); break;
-                    case 'set_post_shortdescription' :  $this->optimizmeaction->updateShortDescription($postId, $dataOptimizme); break;
-                    case 'set_post_metadescription' :   $this->optimizmeaction->updateMetaDescription($postId, $dataOptimizme); break;
-                    case 'set_post_metatitle' :         $this->optimizmeaction->updateMetaTitle($postId, $dataOptimizme); break;
-                    case 'set_post_slug' :              $this->optimizmeaction->updateSlug($postId, $dataOptimizme); break;
-                    case 'set_post_status' :            $this->optimizmeaction->updatePostStatus($postId, $dataOptimizme); break;
-                    case 'set_post_imgattributes' :     $this->optimizmeaction->updateAttributesTag($postId, $dataOptimizme, 'img'); break;
+                    case 'set_product_title' :             $this->optimizmeaction->updateTitle($postId, $dataOptimizme); break;
+                    case 'set_product_content' :           $this->optimizmeaction->updateContent($postId, $dataOptimizme); break;
+                    case 'set_product_shortdescription' :  $this->optimizmeaction->updateShortDescription($postId, $dataOptimizme); break;
+                    case 'set_product_metadescription' :   $this->optimizmeaction->updateMetaDescription($postId, $dataOptimizme); break;
+                    case 'set_product_metatitle' :         $this->optimizmeaction->updateMetaTitle($postId, $dataOptimizme); break;
+                    case 'set_product_slug' :              $this->optimizmeaction->updateSlug($postId, $dataOptimizme); break;
+                    case 'set_product_status' :            $this->optimizmeaction->updatePostStatus($postId, $dataOptimizme); break;
+                    case 'set_product_imgattributes' :     $this->optimizmeaction->updateAttributesTag($postId, $dataOptimizme, 'img'); break;
                     case 'set_post_hrefattributes' :    $this->optimizmeaction->updateAttributesTag($postId, $dataOptimizme, 'a'); break;
                     case 'set_post_reference' :         $this->optimizmeaction->setReference($postId, $dataOptimizme); break;
 
@@ -117,8 +117,8 @@ class Index extends \Magento\Framework\App\Action\Action
                     case 'redirection_delete':          $this->optimizmeaction->deleteRedirection($dataOptimizme); break;
 
                     // load content
-                    case 'load_post_content' :          $this->optimizmeaction->loadPostContent($postId); break;
-                    case 'load_posts_pages':            $this->optimizmeaction->loadPostsPages(); break;
+                    case 'get_products':                $this->optimizmeaction->getProducts(); break;
+                    case 'get_product' :                $this->optimizmeaction->getProduct($postId); break;
 
                     // categories
                     case 'load_categories':             $this->optimizmeaction->loadCategories(); break;

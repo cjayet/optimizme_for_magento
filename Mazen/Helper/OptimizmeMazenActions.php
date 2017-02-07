@@ -332,11 +332,10 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Return content from a post
+     * Get product detail
      * @param $idPost
-     * @param $objData
      */
-    public function loadPostContent($idPost){
+    public function getProduct($idPost){
 
         /* @var $product \Magento\Catalog\Model\Product */
         // get product details
@@ -372,7 +371,7 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Load posts/pages
      */
-    public function loadPostsPages(){
+    public function getProducts(){
         /* @var $product \Magento\Catalog\Model\Product */
 
         $tabResults = array();
