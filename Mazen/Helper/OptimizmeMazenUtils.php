@@ -280,8 +280,6 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
                         $product->$setter($value);
                         $product->save();
 
-                        $objAction->returnAjax['message'] = 'Field saved';
-
                         return $product;
                     }
                     catch (\Exception $e){
@@ -337,6 +335,37 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
         if (is_null($key))                  $key = '';
         return $key;
     }
+
+    /**
+     * Is param a JWT?
+     * @param $s
+     * @return bool
+     */
+    public function optMazenIsJwt($s){
+        if (is_array($s)) {
+            return false;
+        }
+        if (is_object($s)) {
+            return false;
+        }
+        if (substr_count($s, '.') != 2) {
+            return false;
+        }
+        if (strstr($s, '{')) {
+            return false;
+        }
+        if (strstr($s, '}')) {
+            return false;
+        }
+        if (strstr($s, ':')) {
+            return false;
+        }
+
+        // all tests OK, JWT
+        return true;
+    }
+
+
 
     /**
      *  clean config cache

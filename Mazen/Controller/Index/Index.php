@@ -32,7 +32,6 @@ class Index extends \Magento\Framework\App\Action\Action
         $this->boolNoAction = 0;
         $this->OPTIMIZME_MAZEN_JWT_SECRET = '';
 
-
         parent::__construct($context);
     }
 
@@ -42,35 +41,75 @@ class Index extends \Magento\Framework\App\Action\Action
      */
     public function execute()
     {
+        /* @var $optimizmeMazenAction \Optimizmeformagento\Mazen\Helper\OptimizmeMazenActions */
+        /* @var $optimizmeMazenUtils \Optimizmeformagento\Mazen\Helper\OptimizmeMazenUtils */
         header("Access-Control-Allow-Origin: *");
 
+        // load helper classes
         $this->optimizmeaction = $this->_objectManager->create('Optimizmeformagento\Mazen\Helper\OptimizmeMazenActions');
         $this->optimizmeutils = $this->_objectManager->create('Optimizmeformagento\Mazen\Helper\OptimizmeMazenUtils');
+        $optimizmeMazenAction = $this->optimizmeaction;
+        $optimizmeMazenUtils = $this->optimizmeutils;
 
-        if (isset($_REQUEST['data_optme']) && $_REQUEST['data_optme'] != '')
-        {
-            // is valid request?
-            if ( substr_count($_REQUEST['data_optme'], '.') == 2){
+        // load JWT
+        $this->OPTIMIZME_MAZEN_JWT_SECRET = $optimizmeMazenUtils->getJwtKey();
 
-                // JWT
-                try {
-                    // try decode JSON Web Token
-                    $this->OPTIMIZME_MAZEN_JWT_SECRET = $this->optimizmeutils->getJwtKey();
-                    $decoded = JWT::decode($_REQUEST['data_optme'], $this->OPTIMIZME_MAZEN_JWT_SECRET, array('HS256'));
-                    $dataOptimizme = $decoded;
-                } catch (\Firebase\JWT\SignatureInvalidException $e){
-                    $msg = 'JSON Web Token not decoded properly: '. $e->getMessage();
-                    $this->optimizmeaction->setMsgReturn($msg, 'danger');
-                    die;
-                }
+        if (isset($_REQUEST['data_optme'])) {
+            // $_POST/$_GET
+            $requestDataOptme = new \stdClass();
+            $requestDataOptme->data_optme = $_REQUEST['data_optme'];
+            $requestDataOptme = json_encode($requestDataOptme);
+        } else {
+            // try to get application/json content
+            $requestDataOptme = stripslashes(file_get_contents('php://input'));
+        }
+
+        if (isset($requestDataOptme) && $requestDataOptme != '') {
+            $jsonData = json_decode($requestDataOptme);
+            if (!isset($jsonData->data_optme) || $jsonData->data_optme == '') {
+                exit;
             }
-            else {
 
+            if ($optimizmeMazenUtils->optMazenIsJwt($jsonData->data_optme)) {
+                // JWT
+                if ( !isset($this->OPTIMIZME_MAZEN_JWT_SECRET) || $this->OPTIMIZME_MAZEN_JWT_SECRET == '') {
+                    $msg = 'JSON Web Token not defined, this CMS is not registered.';
+                    $optimizmeMazenAction->setMsgReturn($msg, 'danger');
+                    die;
+                } else {
+                    try {
+                        // try decode JSON Web Token
+                        $decoded = JWT::decode($jsonData->data_optme, $this->OPTIMIZME_MAZEN_JWT_SECRET, array('HS256'));
+                        $dataOptimizme = $decoded;
+                    } catch (\Firebase\JWT\SignatureInvalidException $e) {
+                        $msg = 'JSON Web Token not decoded properly: '. $e;
+                        $optimizmeMazenAction->setMsgReturn($msg, 'danger');
+                        die;
+                    }
+
+                    // log action
+                    /*
+                    $logContent = "\n--------------\n". 'Date '. date('Y-m-d H:i:s') ."\n";
+                    $logContent .= 'Data: '. $requestDataOptme . "\n";
+
+                    try {
+                        if (is_writable($tOPTIMIZME_MAZEN_LOGS)) {
+                            if ($handle = fopen(OPTIMIZME_MAZEN_LOGS, 'a+')) {
+                                fwrite($handle, $logContent);
+                                fclose($handle);
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        // no log
+                    }
+                    */
+                }
+            } else {
                 // simple JSON, only for "register_cms" action
-                $dataOptimizme = json_decode(stripslashes($_REQUEST['data_optme']));
-                if ( !is_object($dataOptimizme) || $dataOptimizme->action != 'register_cms'){
-                    $msg = 'JSON Web Token needed.';
-                    $this->optimizmeaction->setMsgReturn($msg, 'danger');
+                $dataOptimizme = $jsonData->data_optme;
+                if (!is_object($dataOptimizme) || $dataOptimizme->action != 'register_cms') {
+                    $msg = 'JSON Web Token needed';
+                    $optimizmeMazenAction->setMsgReturn($msg, 'danger');
                     die;
                 }
             }
@@ -90,7 +129,7 @@ class Index extends \Magento\Framework\App\Action\Action
             {
                 // no action specified
                 $msg = 'No action defined';
-                $this->optimizmeaction->setMsgReturn($msg, 'danger');
+                $optimizmeMazenAction->setMsgReturn($msg, 'danger');
             }
             else
             {
@@ -98,39 +137,77 @@ class Index extends \Magento\Framework\App\Action\Action
                 switch ($dataOptimizme->action){
 
                     // init dialog
-                    case 'register_cms':                $this->optimizmeaction->registerCMS($dataOptimizme); break;
+                    case 'register_cms':
+                        $optimizmeMazenAction->registerCMS($dataOptimizme);
+                        break;
 
-                    // post
-                    case 'set_product_title' :             $this->optimizmeaction->updateTitle($postId, $dataOptimizme); break;
-                    case 'set_product_content' :           $this->optimizmeaction->updateContent($postId, $dataOptimizme); break;
-                    case 'set_product_shortdescription' :  $this->optimizmeaction->updateShortDescription($postId, $dataOptimizme); break;
-                    case 'set_product_metadescription' :   $this->optimizmeaction->updateMetaDescription($postId, $dataOptimizme); break;
-                    case 'set_product_metatitle' :         $this->optimizmeaction->updateMetaTitle($postId, $dataOptimizme); break;
-                    case 'set_product_slug' :              $this->optimizmeaction->updateSlug($postId, $dataOptimizme); break;
-                    case 'set_product_status' :            $this->optimizmeaction->updatePostStatus($postId, $dataOptimizme); break;
-                    case 'set_product_imgattributes' :     $this->optimizmeaction->updateAttributesTag($postId, $dataOptimizme, 'img'); break;
-                    case 'set_post_hrefattributes' :    $this->optimizmeaction->updateAttributesTag($postId, $dataOptimizme, 'a'); break;
-                    case 'set_post_reference' :         $this->optimizmeaction->setReference($postId, $dataOptimizme); break;
+                    // products
+                    case 'get_products':
+                        $optimizmeMazenAction->getProducts();
+                        break;
+                    case 'get_product' :
+                        $optimizmeMazenAction->getProduct($postId);
+                        break;
+                    case 'set_product_title' :
+                        $optimizmeMazenAction->updateTitle($postId, $dataOptimizme);
+                        break;
+                    case 'set_product_content' :
+                        $optimizmeMazenAction->updateContent($postId, $dataOptimizme);
+                        break;
+                    case 'set_product_shortdescription' :
+                        $optimizmeMazenAction->updateShortDescription($postId, $dataOptimizme);
+                        break;
+                    case 'set_product_metadescription' :
+                        $optimizmeMazenAction->updateMetaDescription($postId, $dataOptimizme);
+                        break;
+                    case 'set_product_metatitle' :
+                        $optimizmeMazenAction->updateMetaTitle($postId, $dataOptimizme);
+                        break;
+                    case 'set_product_slug' :
+                        $optimizmeMazenAction->updateSlug($postId, $dataOptimizme);
+                        break;
+                    case 'set_product_status' :
+                        $optimizmeMazenAction->updatePostStatus($postId, $dataOptimizme);
+                        break;
+                    case 'set_product_imgattributes' :
+                        $optimizmeMazenAction->updateAttributesTag($postId, $dataOptimizme, 'img');
+                        break;
+                    case 'set_product_hrefattributes' :
+                        $optimizmeMazenAction->updateAttributesTag($postId, $dataOptimizme, 'a');
+                        break;
+                    case 'set_product_reference' :
+                        $optimizmeMazenAction->setReference($postId, $dataOptimizme);
+                        break;
 
                     // redirections
-                    case 'load_redirections':           $this->optimizmeaction->loadRedirections(); break;
-                    case 'redirection_delete':          $this->optimizmeaction->deleteRedirection($dataOptimizme); break;
+                    case 'get_redirections':
+                        $optimizmeMazenAction->loadRedirections();
+                        break;
+                    case 'delete_redirection':
+                        $optimizmeMazenAction->deleteRedirection($dataOptimizme);
+                        break;
 
-                    // load content
-                    case 'get_products':                $this->optimizmeaction->getProducts(); break;
-                    case 'get_product' :                $this->optimizmeaction->getProduct($postId); break;
+                    // product categories
+                    case 'get_product_categories':
+                        $optimizmeMazenAction->loadCategories();
+                        break;
+                    case 'get_product_category':
+                        $optimizmeMazenAction->loadCategoryContent($postId);
+                        break;
+                    case 'set_product_category_name':
+                        $optimizmeMazenAction->setCategoryName($postId, $dataOptimizme);
+                        break;
+                    case 'set_product_category_description':
+                        $optimizmeMazenAction->setCategoryDescription($postId, $dataOptimizme);
+                        break;
+                    case 'set_product_category_slug':
+                        $optimizmeMazenAction->updateCategorySlug($postId, $dataOptimizme);
+                        break;
 
-                    // categories
-                    case 'load_categories':             $this->optimizmeaction->loadCategories(); break;
-                    case 'load_category_content':       $this->optimizmeaction->loadCategoryContent($postId); break;
-                    case 'set_category_name':           $this->optimizmeaction->setCategoryName($postId, $dataOptimizme); break;
-                    case 'set_category_description':    $this->optimizmeaction->setCategoryDescription($postId, $dataOptimizme); break;
-                    case 'set_category_slug':           $this->optimizmeaction->updateCategorySlug($postId, $dataOptimizme); break;
-
-                    // create content
-                    // TODO magento
-
-                    default:                            $this->boolNoAction = 1; break;
+                    // default
+                    default:
+                        $this->boolNoAction = 1;
+                        break;
                 }
 
                 // results of action
@@ -138,33 +215,32 @@ class Index extends \Magento\Framework\App\Action\Action
                 {
                     // no action done
                     $msg = 'No action found.';
-                    $this->optimizmeaction->setMsgReturn($msg, 'danger');
+                    $optimizmeMazenAction->setMsgReturn($msg, 'danger');
                 }
                 else
                 {
                     // action done
-                    if (is_array($this->optimizmeaction->tabErrors) && count($this->optimizmeaction->tabErrors) > 0)
+                    if (is_array($optimizmeMazenAction->tabErrors) && count($optimizmeMazenAction->tabErrors) > 0)
                     {
-                        $this->optimizmeaction->returnResult['result'] = 'danger';
+                        $optimizmeMazenAction->returnResult['result'] = 'danger';
                         $msg = 'Une ou plusieurs erreurs ont été levées : ';
-                        $msg .= $this->optimizmeutils->getListMessages($this->optimizmeaction->tabErrors, 1);
-                        $this->optimizmeaction->setMsgReturn($msg, 'danger');
+                        $msg .= $optimizmeMazenUtils->getListMessages($optimizmeMazenAction->tabErrors, 1);
+                        $optimizmeMazenAction->setMsgReturn($msg, 'danger');
                     }
-                    elseif (is_array($this->optimizmeaction->returnAjax) && count($this->optimizmeaction->returnAjax) > 0)
+                    elseif (is_array($optimizmeMazenAction->returnAjax) && count($optimizmeMazenAction->returnAjax) > 0)
                     {
                         // ajax to return - encode data
-                        $this->optimizmeaction->setDataReturn($this->optimizmeaction->returnAjax);
+                        $optimizmeMazenAction->setDataReturn($optimizmeMazenAction->returnAjax);
                     }
                     else
                     {
                         // no error, OK !
                         $msg = 'Action done!';
-                        $msg .= $this->optimizmeutils->getListMessages($this->optimizmeaction->tabSuccess);
-                        $this->optimizmeaction->setMsgReturn($msg);
+                        $msg .= $optimizmeMazenUtils->getListMessages($optimizmeMazenAction->tabSuccess);
+                        $optimizmeMazenAction->setMsgReturn($msg);
                     }
                 }
             }
-
 
             // stop script - no need to go further
             die;

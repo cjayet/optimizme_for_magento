@@ -57,6 +57,87 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
         $this->returnAjax = array();
     }
 
+
+    ////////////////////////////////////////////////
+    //              PRODUCTS
+    ////////////////////////////////////////////////
+
+    /**
+     * Load products list
+     */
+    public function getProducts(){
+        /* @var $product \Magento\Catalog\Model\Product */
+
+        $tabResults = array();
+        $productsReturn = array();
+
+        // récupération de la liste des produits
+        $collection = $this->productCollectionFactory->create();
+        $collection->setPageSize(10);    // TODO remove product limit
+        $products = $collection->getData();
+
+        if (count($products)>0){
+            foreach ($products as $productBoucle){
+
+                // get product details
+                $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
+                $product = $objectManager->create('Magento\Catalog\Model\Product')->load($productBoucle['entity_id']);
+
+                if ($product->getName() != ''){
+                    if ($product->getStatus() == 1)         $status = 'En ligne';
+                    else                                    $status = 'Hors ligne';
+                    $prodReturn = array(
+                        'ID' => $product->getId(),
+                        'post_title' => $product->getName(),
+                        'post_status' => $status
+                    );
+                    array_push($productsReturn, $prodReturn);
+                }
+            }
+        }
+
+        $tabResults['products'] = $productsReturn;
+        $this->returnAjax['arborescence'] = $tabResults;
+    }
+
+    /**
+     * Get product detail
+     * @param $idPost
+     */
+    public function getProduct($idPost){
+
+        /* @var $product \Magento\Catalog\Model\Product */
+        // get product details
+        $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
+        $product = $objectManager->create('Magento\Catalog\Model\Product')->load($idPost);
+
+        if ($product->getId() != ''){
+
+            // check si le contenu est bien compris dans une balise "row" pour qu'il soit bien inclus dans l'éditeur
+            if (trim($product->getDescription()) != ''){
+                if (!stristr($product->getDescription(), '<div class="row')){
+                    $product->setDescription('<div class="row ui-droppable"><div class="col-md-12 col-sm-12 col-xs-12 column"><div class="ge-content ge-content-type-tinymce" data-ge-content-type="tinymce">'. $product->getDescription() .'</div></div></div>');
+                }
+            }
+
+            // load and return product data
+            $this->returnAjax['post']['title'] = $product->getName();
+            $this->returnAjax['post']['reference'] = $product->getSku();
+            $this->returnAjax['post']['short_description'] = $product->getShortDescription();
+            $this->returnAjax['post']['content'] = $product->getDescription();
+            $this->returnAjax['post']['slug'] = $product->getUrlKey();
+            $this->returnAjax['post']['url'] = $product->getUrlModel()->getUrl($product);
+            $this->returnAjax['post']['publish'] = $product->getStatus();
+            $this->returnAjax['post']['meta_description'] = $product->getMetaDescription();
+            $this->returnAjax['post']['meta_title'] = $product->getMetaTitle();
+            //$this->returnAjax['post']['url_canonical'] = '';
+            //$this->returnAjax['post']['noindex'] = '';
+            //$this->returnAjax['post']['nofollow'] = '';
+            //$this->returnAjax['post']['blog_public'] = 1;
+        }
+    }
+
+
     /**
      * Update product name
      * @param $idPost
@@ -331,84 +412,11 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
         $this->optimizmeMazenUtils->saveObjField($idPost, 'Sku', 'Product', $objData->new_reference, $this, 1);
     }
 
-    /**
-     * Get product detail
-     * @param $idPost
-     */
-    public function getProduct($idPost){
 
-        /* @var $product \Magento\Catalog\Model\Product */
-        // get product details
-        $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
-        $product = $objectManager->create('Magento\Catalog\Model\Product')->load($idPost);
-
-        if ($product->getId() != ''){
-
-            // check si le contenu est bien compris dans une balise "row" pour qu'il soit bien inclus dans l'éditeur
-            if (trim($product->getDescription()) != ''){
-                if (!stristr($product->getDescription(), '<div class="row')){
-                    $product->setDescription('<div class="row ui-droppable"><div class="col-md-12 col-sm-12 col-xs-12 column"><div class="ge-content ge-content-type-tinymce" data-ge-content-type="tinymce">'. $product->getDescription() .'</div></div></div>');
-                }
-            }
-
-            // load and return product data
-            $this->returnAjax['title'] = $product->getName();
-            $this->returnAjax['reference'] = $product->getSku();
-            $this->returnAjax['short_description'] = $product->getShortDescription();
-            $this->returnAjax['content'] = $product->getDescription();
-            $this->returnAjax['slug'] = $product->getUrlKey();
-            $this->returnAjax['url'] = $product->getUrlModel()->getUrl($product);
-            $this->returnAjax['publish'] = $product->getStatus();
-            $this->returnAjax['meta_description'] = $product->getMetaDescription();
-            $this->returnAjax['meta_title'] = $product->getMetaTitle();
-            $this->returnAjax['url_canonical'] = '';                                    // TODO gestion url canonique
-            $this->returnAjax['noindex'] = '';                                          // TODO gestion noindex
-            $this->returnAjax['nofollow'] = '';                                         // TODO gestion nofollow
-            $this->returnAjax['blog_public'] = 1;
-        }
-    }
-
-    /**
-     * Load posts/pages
-     */
-    public function getProducts(){
-        /* @var $product \Magento\Catalog\Model\Product */
-
-        $tabResults = array();
-        $productsReturn = array();
-
-        // récupération de la liste des produits
-        $collection = $this->productCollectionFactory->create();
-        $collection->setPageSize(10);    // TODO remove limit
-        $products = $collection->getData();
-
-        if (count($products)>0){
-            foreach ($products as $productBoucle){
-
-                // get product details
-                $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
-                $product = $objectManager->create('Magento\Catalog\Model\Product')->load($productBoucle['entity_id']);
-
-                if ($product->getName() != ''){
-                    if ($product->getStatus() == 1)         $status = 'En ligne';
-                    else                                    $status = 'Hors ligne';
-                    $prodReturn = array(
-                        'ID' => $product->getId(),
-                        'post_title' => $product->getName(),
-                        'post_status' => $status
-                    );
-                    array_push($productsReturn, $prodReturn);
-                }
-            }
-        }
-
-        $tabResults['posts'] = $productsReturn;
-        $this->returnAjax['arborescence'] = $tabResults;
-    }
 
 
     ////////////////////////////////////////////////
-    //              CATEGORIES
+    //              PRODUCT CATEGORIES
     ////////////////////////////////////////////////
 
     /**
