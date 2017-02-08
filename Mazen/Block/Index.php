@@ -27,5 +27,4 @@ class Index extends \Magento\Framework\View\Element\Template
     {
         return 'Silence is golden';
     }
-
 }

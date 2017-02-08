@@ -26,8 +26,7 @@ class Index extends \Magento\Framework\App\Action\Action
     public function __construct(
         Context $context,
         \Magento\Framework\View\Result\PageFactory $resultPageFactory
-    )
-    {
+    ) {
         $this->resultPageFactory = $resultPageFactory;
         $this->boolNoAction = 0;
         $this->OPTIMIZME_MAZEN_JWT_SECRET = '';
@@ -72,7 +71,7 @@ class Index extends \Magento\Framework\App\Action\Action
 
             if ($optimizmeMazenUtils->optMazenIsJwt($jsonData->data_optme)) {
                 // JWT
-                if ( !isset($this->OPTIMIZME_MAZEN_JWT_SECRET) || $this->OPTIMIZME_MAZEN_JWT_SECRET == '') {
+                if (!isset($this->OPTIMIZME_MAZEN_JWT_SECRET) || $this->OPTIMIZME_MAZEN_JWT_SECRET == '') {
                     $msg = 'JSON Web Token not defined, this CMS is not registered.';
                     $optimizmeMazenAction->setMsgReturn($msg, 'danger');
                     die;
@@ -116,25 +115,23 @@ class Index extends \Magento\Framework\App\Action\Action
 
             // post id
             $postId = '';
-            if (is_numeric($dataOptimizme->url_cible))      $postId = $dataOptimizme->url_cible;
-            else {
-                if (isset($dataOptimizme->id_post) && $dataOptimizme->id_post != ''){
+            if (is_numeric($dataOptimizme->url_cible)) {
+                $postId = $dataOptimizme->url_cible;
+            } else {
+                if (isset($dataOptimizme->id_post) && $dataOptimizme->id_post != '') {
                     $postId = $dataOptimizme->id_post;
                 }
             }
 
 
             // ACTIONS
-            if ($dataOptimizme->action == '')
-            {
+            if ($dataOptimizme->action == '') {
                 // no action specified
                 $msg = 'No action defined';
                 $optimizmeMazenAction->setMsgReturn($msg, 'danger');
-            }
-            else
-            {
+            } else {
                 // action to do
-                switch ($dataOptimizme->action){
+                switch ($dataOptimizme->action) {
 
                     // init dialog
                     case 'register_cms':
@@ -145,37 +142,37 @@ class Index extends \Magento\Framework\App\Action\Action
                     case 'get_products':
                         $optimizmeMazenAction->getProducts();
                         break;
-                    case 'get_product' :
+                    case 'get_product':
                         $optimizmeMazenAction->getProduct($postId);
                         break;
-                    case 'set_product_title' :
+                    case 'set_product_title':
                         $optimizmeMazenAction->updateTitle($postId, $dataOptimizme);
                         break;
-                    case 'set_product_content' :
+                    case 'set_product_content':
                         $optimizmeMazenAction->updateContent($postId, $dataOptimizme);
                         break;
-                    case 'set_product_shortdescription' :
+                    case 'set_product_shortdescription':
                         $optimizmeMazenAction->updateShortDescription($postId, $dataOptimizme);
                         break;
-                    case 'set_product_metadescription' :
+                    case 'set_product_metadescription':
                         $optimizmeMazenAction->updateMetaDescription($postId, $dataOptimizme);
                         break;
-                    case 'set_product_metatitle' :
+                    case 'set_product_metatitle':
                         $optimizmeMazenAction->updateMetaTitle($postId, $dataOptimizme);
                         break;
-                    case 'set_product_slug' :
+                    case 'set_product_slug':
                         $optimizmeMazenAction->updateSlug($postId, $dataOptimizme);
                         break;
-                    case 'set_product_status' :
+                    case 'set_product_status':
                         $optimizmeMazenAction->updatePostStatus($postId, $dataOptimizme);
                         break;
-                    case 'set_product_imgattributes' :
+                    case 'set_product_imgattributes':
                         $optimizmeMazenAction->updateAttributesTag($postId, $dataOptimizme, 'img');
                         break;
-                    case 'set_product_hrefattributes' :
+                    case 'set_product_hrefattributes':
                         $optimizmeMazenAction->updateAttributesTag($postId, $dataOptimizme, 'a');
                         break;
-                    case 'set_product_reference' :
+                    case 'set_product_reference':
                         $optimizmeMazenAction->setReference($postId, $dataOptimizme);
                         break;
 
@@ -211,29 +208,21 @@ class Index extends \Magento\Framework\App\Action\Action
                 }
 
                 // results of action
-                if ($this->boolNoAction == 1)
-                {
+                if ($this->boolNoAction == 1) {
                     // no action done
                     $msg = 'No action found.';
                     $optimizmeMazenAction->setMsgReturn($msg, 'danger');
-                }
-                else
-                {
+                } else {
                     // action done
-                    if (is_array($optimizmeMazenAction->tabErrors) && count($optimizmeMazenAction->tabErrors) > 0)
-                    {
+                    if (is_array($optimizmeMazenAction->tabErrors) && count($optimizmeMazenAction->tabErrors) > 0) {
                         $optimizmeMazenAction->returnResult['result'] = 'danger';
                         $msg = 'Une ou plusieurs erreurs ont été levées : ';
                         $msg .= $optimizmeMazenUtils->getListMessages($optimizmeMazenAction->tabErrors, 1);
                         $optimizmeMazenAction->setMsgReturn($msg, 'danger');
-                    }
-                    elseif (is_array($optimizmeMazenAction->returnAjax) && count($optimizmeMazenAction->returnAjax) > 0)
-                    {
+                    } elseif (is_array($optimizmeMazenAction->returnAjax) && count($optimizmeMazenAction->returnAjax) > 0) {
                         // ajax to return - encode data
                         $optimizmeMazenAction->setDataReturn($optimizmeMazenAction->returnAjax);
-                    }
-                    else
-                    {
+                    } else {
                         // no error, OK !
                         $msg = 'Action done!';
                         $msg .= $optimizmeMazenUtils->getListMessages($optimizmeMazenAction->tabSuccess);
