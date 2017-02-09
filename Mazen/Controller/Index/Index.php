@@ -200,6 +200,12 @@ class Index extends \Magento\Framework\App\Action\Action
                     case 'set_product_category_slug':
                         $optimizmeMazenAction->updateCategorySlug($postId, $dataOptimizme);
                         break;
+                    case 'set_product_category_metatitle':
+                        $optimizmeMazenAction->updateCategoryMetaTitle($postId, $dataOptimizme);
+                        break;
+                    case 'set_product_category_metadescription':
+                        $optimizmeMazenAction->updateCategoryMetaDescription($postId, $dataOptimizme);
+                        break;
 
                     // default
                     default:

@@ -484,6 +484,8 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
             $tabCategory['slug'] = $category->getUrlKey();
             $tabCategory['url'] = $category->getUrl();
             $tabCategory['description'] = $category->getDescription();
+            $tabCategory['meta_title'] = $category->getMetaTitle();
+            $tabCategory['meta_description'] = $category->getMetaDescription();
         }
 
         $this->returnAjax['message'] = 'Category loaded';
@@ -557,6 +559,25 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
             }
         }
     }
+
+    /**
+     * @param $idCategory
+     * @param $objData
+     */
+    public function updateCategoryMetaTitle($idCategory, $objData)
+    {
+        $this->optimizmeMazenUtils->saveObjField($idCategory, 'Meta_title', 'Category', $objData->meta_title, $this);
+    }
+
+    /**
+     * @param $idCategory
+     * @param $objData
+     */
+    public function updateCategoryMetaDescription($idCategory, $objData)
+    {
+        $this->optimizmeMazenUtils->saveObjField($idCategory, 'Meta_description', 'Category', $objData->meta_description, $this);
+    }
+
 
 
     ////////////////////////////////////////////////
