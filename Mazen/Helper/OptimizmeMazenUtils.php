@@ -267,28 +267,46 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
             $objAction->addMsgError('Function '. $field .' missing');
         } else {
             // all is ok: try to save
-            // get product/category details
-            $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
-            $product = $objectManager->create('Magento\Catalog\Model\\'. $type)->load($idProduct);
+            // get product/category/page details
+            if ($type == 'Product') {
+                $namespaceUsedModel = 'Catalog';
+            }
+            elseif ($type == 'Category') {
+                $namespaceUsedModel = 'Catalog';
+            }
+            else {
+                $namespaceUsedModel = 'Cms';
+            }
 
-            /* @var \Magento\Catalog\Model\Product $product */
-            if ($product->getId() == '') {
+            $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
+            $object = $objectManager->create('Magento\\'. $namespaceUsedModel .'\Model\\'. $type)->load($idProduct);
+
+            if ($namespaceUsedModel == 'Catalog') {
+                $idObj = $object->getId();
+            }
+            else {
+                $idObj = $object->getPageId();
+            }
+
+
+            /* @var \Magento\Catalog\Model\Product $object */
+            if ($idObj == '') {
                 $objAction->addMsgError('Loading element failed', 1);
             } else {
                 // update if different
                 $setter = 'set'. $field;
                 $getter = 'get'. $field;
 
-                $currentValue = $product->$getter();
+                $currentValue = $object->$getter();
                 if ($currentValue != $value) {
                     // new value => save
                     try {
-                        $product->$setter($value);
-                        $product->save();
+                        $object->$setter($value);
+                        $object->save();
 
-                        return $product;
+                        return $object;
                     } catch (\Exception $e) {
-                        $objAction->addMsgError('Product not saved, '. $e->getMessage(), 1);
+                        $objAction->addMsgError('Object not saved, '. $e->getMessage(), 1);
                     }
                 }
             }

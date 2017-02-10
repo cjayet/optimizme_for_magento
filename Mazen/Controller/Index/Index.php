@@ -81,7 +81,7 @@ class Index extends \Magento\Framework\App\Action\Action
                         $decoded = JWT::decode($jsonData->data_optme, $this->OPTIMIZME_MAZEN_JWT_SECRET, array('HS256'));
                         $dataOptimizme = $decoded;
                     } catch (\Firebase\JWT\SignatureInvalidException $e) {
-                        $msg = 'JSON Web Token not decoded properly: '. $e;
+                        $msg = 'JSON Web Token not decoded properly, secret may be not correct';
                         $optimizmeMazenAction->setMsgReturn($msg, 'danger');
                         die;
                     }
@@ -146,42 +146,69 @@ class Index extends \Magento\Framework\App\Action\Action
                         $optimizmeMazenAction->getProduct($postId);
                         break;
                     case 'set_product_title':
-                        $optimizmeMazenAction->updateTitle($postId, $dataOptimizme);
+                        $optimizmeMazenAction->updateObjectTitle($postId, $dataOptimizme, 'Product', 'Name');
                         break;
                     case 'set_product_content':
-                        $optimizmeMazenAction->updateContent($postId, $dataOptimizme);
+                        $optimizmeMazenAction->updateObjectContent($postId, $dataOptimizme, 'Product', 'Description');
                         break;
                     case 'set_product_shortdescription':
-                        $optimizmeMazenAction->updateShortDescription($postId, $dataOptimizme);
+                        $optimizmeMazenAction->updateObjectShortDescription($postId, $dataOptimizme, 'Product', 'ShortDescription');
                         break;
                     case 'set_product_metadescription':
-                        $optimizmeMazenAction->updateMetaDescription($postId, $dataOptimizme);
+                        $optimizmeMazenAction->updateObjectMetaDescription($postId, $dataOptimizme, 'Product', 'MetaDescription');
                         break;
                     case 'set_product_metatitle':
-                        $optimizmeMazenAction->updateMetaTitle($postId, $dataOptimizme);
+                        $optimizmeMazenAction->updateObjectMetaTitle($postId, $dataOptimizme, 'Product', 'MetaTitle');
                         break;
                     case 'set_product_slug':
-                        $optimizmeMazenAction->updateSlug($postId, $dataOptimizme);
+                        $optimizmeMazenAction->updateObjectSlug($postId, $dataOptimizme, 'Product', 'UrlKey');
                         break;
                     case 'set_product_status':
-                        $optimizmeMazenAction->updatePostStatus($postId, $dataOptimizme);
+                        $optimizmeMazenAction->updateObjectStatus($postId, $dataOptimizme, 'Product', 'Status');
                         break;
                     case 'set_product_imgattributes':
-                        $optimizmeMazenAction->updateAttributesTag($postId, $dataOptimizme, 'img');
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'img', 'Product', 'Description');
                         break;
                     case 'set_product_hrefattributes':
-                        $optimizmeMazenAction->updateAttributesTag($postId, $dataOptimizme, 'a');
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'a', 'Product', 'Description');
                         break;
                     case 'set_product_reference':
-                        $optimizmeMazenAction->setReference($postId, $dataOptimizme);
+                        $optimizmeMazenAction->updateObjectReference($postId, $dataOptimizme, 'Product', 'Sku');
                         break;
 
-                    // redirections
-                    case 'get_redirections':
-                        $optimizmeMazenAction->loadRedirections();
+                    // CMS pages
+                    case 'get_posts':
+                        $optimizmeMazenAction->getPages();
                         break;
-                    case 'delete_redirection':
-                        $optimizmeMazenAction->deleteRedirection($dataOptimizme);
+                    case 'get_post':
+                        $optimizmeMazenAction->getPage($postId);
+                        break;
+                    case 'set_post_title':
+                        $optimizmeMazenAction->updateObjectTitle($postId, $dataOptimizme, 'Page', 'Title');
+                        break;
+                    case 'set_post_slug':
+                        $optimizmeMazenAction->updateObjectSlug($postId, $dataOptimizme, 'Page', 'Identifier');
+                        break;
+                    case 'set_post_metatitle':
+                        $optimizmeMazenAction->updateObjectMetaTitle($postId, $dataOptimizme, 'Page', 'Metatitle');
+                        break;
+                    case 'set_post_metadescription':
+                        $optimizmeMazenAction->updateObjectMetaDescription($postId, $dataOptimizme, 'Page', 'Metadescription');
+                        break;
+                    case 'set_post_shortdescription':
+                        $optimizmeMazenAction->updateObjectShortDescription($postId, $dataOptimizme, 'Page', 'ContentHeading');
+                        break;
+                    case 'set_post_status':
+                        $optimizmeMazenAction->updateObjectStatus($postId, $dataOptimizme, 'Page', 'IsActive');
+                        break;
+                    case 'set_post_content':
+                        $optimizmeMazenAction->updateObjectContent($postId, $dataOptimizme, 'Page', 'Content');
+                        break;
+                    case 'set_post_imgattributes':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'img', 'Page', 'Content');
+                        break;
+                    case 'set_post_hrefattributes':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'a', 'Page', 'Content');
                         break;
 
                     // product categories
@@ -192,19 +219,27 @@ class Index extends \Magento\Framework\App\Action\Action
                         $optimizmeMazenAction->loadCategoryContent($postId);
                         break;
                     case 'set_product_category_name':
-                        $optimizmeMazenAction->setCategoryName($postId, $dataOptimizme);
+                        $optimizmeMazenAction->updateObjectTitle($postId, $dataOptimizme, 'Category', 'Name');
                         break;
                     case 'set_product_category_description':
-                        $optimizmeMazenAction->setCategoryDescription($postId, $dataOptimizme);
+                        $optimizmeMazenAction->updateObjectContent($postId, $dataOptimizme, 'Category', 'Description');
                         break;
                     case 'set_product_category_slug':
-                        $optimizmeMazenAction->updateCategorySlug($postId, $dataOptimizme);
+                        $optimizmeMazenAction->updateObjectSlug($postId, $dataOptimizme, 'Category', 'UrlKey');
                         break;
                     case 'set_product_category_metatitle':
-                        $optimizmeMazenAction->updateCategoryMetaTitle($postId, $dataOptimizme);
+                        $optimizmeMazenAction->updateObjectMetaTitle($postId, $dataOptimizme, 'Category', 'Meta_title');
                         break;
                     case 'set_product_category_metadescription':
-                        $optimizmeMazenAction->updateCategoryMetaDescription($postId, $dataOptimizme);
+                        $optimizmeMazenAction->updateObjectMetaDescription($postId, $dataOptimizme, 'Category', 'Meta_description');
+                        break;
+
+                    // redirections
+                    case 'get_redirections':
+                        $optimizmeMazenAction->loadRedirections();
+                        break;
+                    case 'delete_redirection':
+                        $optimizmeMazenAction->deleteRedirection($dataOptimizme);
                         break;
 
                     // default
@@ -216,7 +251,7 @@ class Index extends \Magento\Framework\App\Action\Action
                 // results of action
                 if ($this->boolNoAction == 1) {
                     // no action done
-                    $msg = 'No action found.';
+                    $msg = 'No action found!';
                     $optimizmeMazenAction->setMsgReturn($msg, 'danger');
                 } else {
                     // action done

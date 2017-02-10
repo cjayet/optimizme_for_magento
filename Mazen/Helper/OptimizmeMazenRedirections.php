@@ -33,7 +33,7 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
 
 
     /** add a redirection in url_rewrite */
-    public function addRedirection($entityId, $oldUrl, $newUrl, $storeId)
+    public function addRedirection($entityId, $oldUrl, $newUrl, $storeId, $entityType)
     {
         $result = '';
 
@@ -52,7 +52,7 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
                     ->setEntityId($entityId)
                     ->setRequestPath($oldUrl)
                     ->setTargetPath($newUrl)
-                    ->setEntityType('custom')
+                    ->setEntityType($entityType)    // custom?
                     ->setRedirectType('301')
                     ->setStoreId($storeId)
                     ->save();
@@ -97,7 +97,6 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
                 }
             }
         }
-
         return $magRedirections;
     }
 

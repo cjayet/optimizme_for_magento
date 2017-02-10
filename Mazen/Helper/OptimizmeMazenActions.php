@@ -13,6 +13,7 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
     public $returnAjax;
 
     protected $productCollectionFactory;
+    protected $pageCollectionFactory;
     protected $categoryCollectionFactory;
     protected $urlRewriteFactory;
     protected $productUrlPathGenerator;
@@ -32,6 +33,7 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function __construct(
         \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory,
+        \Magento\Cms\Model\ResourceModel\Page\CollectionFactory $pageCollectionFactory,
         \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory $categoryCollectionFactory,
         \Magento\UrlRewrite\Model\UrlRewriteFactory $urlRewriteFactory,
         \Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator $productUrlPathGenerator,
@@ -41,6 +43,7 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
         \Optimizmeformagento\Mazen\Helper\OptimizmeMazenRedirections $optimizmeMazenRedirections
     ) {
         $this->productCollectionFactory = $productCollectionFactory;
+        $this->pageCollectionFactory = $pageCollectionFactory;
         $this->categoryCollectionFactory = $categoryCollectionFactory;
         $this->urlRewriteFactory = $urlRewriteFactory;
         $this->productUrlPathGenerator = $productUrlPathGenerator;
@@ -85,9 +88,9 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
 
                 if ($product->getName() != '') {
                     if ($product->getStatus() == 1) {
-                        $status = 'En ligne';
+                        $status = 'Publish';
                     } else {
-                        $status = 'Hors ligne';
+                        $status = 'Not publish';
                     }
                     $prodReturn = array(
                         'ID' => $product->getId(),
@@ -109,7 +112,6 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getProduct($idPost)
     {
-
         /* @var $product \Magento\Catalog\Model\Product */
         // get product details
         $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
@@ -132,8 +134,8 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
             $this->returnAjax['post']['slug'] = $product->getUrlKey();
             $this->returnAjax['post']['url'] = $product->getUrlModel()->getUrl($product);
             $this->returnAjax['post']['publish'] = $product->getStatus();
-            $this->returnAjax['post']['meta_description'] = $product->getMetaDescription();
             $this->returnAjax['post']['meta_title'] = $product->getMetaTitle();
+            $this->returnAjax['post']['meta_description'] = $product->getMetaDescription();
             //$this->returnAjax['post']['url_canonical'] = '';
             //$this->returnAjax['post']['noindex'] = '';
             //$this->returnAjax['post']['nofollow'] = '';
@@ -143,27 +145,29 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
 
 
     /**
-     * Update product name
+     * Update object name
      * @param $idPost
      * @param $objData
+     * @param $type : Product/Cms
+     * @param $field : field to update
      */
-    public function updateTitle($idPost, $objData)
+    public function updateObjectTitle($idPost, $objData, $type, $field)
     {
-        $this->optimizmeMazenUtils->saveObjField($idPost, 'Name', 'Product', $objData->new_title, $this, 1);
+        $this->optimizmeMazenUtils->saveObjField($idPost, $field, $type, $objData->new_title, $this, 1);
     }
 
     /**
      * @param $idPost
      * @param $objData
+     * @param $type
+     * @param $field
      */
-    public function updateContent($idPost, $objData)
+    public function updateObjectContent($idPost, $objData, $type, $field)
     {
         /* @var $node \DOMElement */
-
         if (!isset($objData->new_content)) {
             // need more data
-            array_push($this->tabErrors, 'Contenu non trouvé.');
-            $this->addMsgError('Contenu non trouvé', 1);
+            $this->addMsgError('Content not found', 1);
         } else {
 
             // copy media files to Magento img
@@ -211,8 +215,8 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
             $newContent = $this->optimizmeMazenUtils->getHtmlFromDom($doc);
             $newContent = $this->optimizmeMazenUtils->cleanHtmlFromMazen($newContent);
 
-            // save product content
-            $this->optimizmeMazenUtils->saveObjField($idPost, 'Description', 'Product', $newContent, $this);
+            // save content
+            $this->optimizmeMazenUtils->saveObjField($idPost, $field, $type, $newContent, $this);
 
             if (count($this->tabErrors) == 0) {
                 $this->returnAjax['message'] = 'Content saved successfully!';
@@ -226,38 +230,56 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $idPost
      * @param $objData
      */
-    public function updateShortDescription($idPost, $objData)
+    public function updateObjectShortDescription($idPost, $objData, $type, $field)
     {
-        $this->optimizmeMazenUtils->saveObjField($idPost, 'ShortDescription', 'Product', $objData->new_short_description, $this);
+        $this->optimizmeMazenUtils->saveObjField($idPost, $field, $type, $objData->new_short_description, $this);
     }
 
     /**
-     * @param $idProduct
+     * @param $idObject
      * @param $objData
      * @param $tag
      */
-    public function updateAttributesTag($idProduct, $objData, $tag)
+    public function updateObjectAttributesTag($idObject, $objData, $tag, $type, $field)
     {
-        /* @var $product \Magento\Catalog\Model\Product */
+        /* @var $object \Magento\Catalog\Model\Product */
         /* @var $node \DOMElement */
 
         $boolModified = 0;
-        if (!is_numeric($idProduct)) {
+        if (!is_numeric($idObject)) {
             // need more data
             $this->addMsgError('ID product not sent', 1);
         }
         if ($objData->url_reference == '') {
             // need more data
-            $this->addMsgError('Aucun lien de référence trouvé, action annulée', 1);
+            $this->addMsgError('No link found, action canceled', 1);
         } else {
             // get product details
             $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
-            $product = $objectManager->create('Magento\Catalog\Model\Product')->load($idProduct);
+            if ($type == 'Product' || $type == 'Category') {
+                $object = $objectManager->create('Magento\Catalog\Model\Product')->load($idObject);
+            }
+            else {
+                $object = $objectManager->create('Magento\Cms\Model\Page')->load($idObject);
+            }
 
-            if ($product->getId() != '') {
+            if ($type == 'Product' || $type == 'Category') {
+                $idObject = $object->getId();
+            }
+            else {
+                $idObject = $object->getPageId();
+            }
+
+            if ($idObject != '') {
                 // load nodes
                 $doc = new \DOMDocument;
-                $nodes = $this->optimizmeMazenUtils->getNodesInDom($doc, $tag, $product->getDescription());
+                if ($field == 'Description') {
+                    $nodes = $this->optimizmeMazenUtils->getNodesInDom($doc, $tag, $object->getDescription());
+                }
+                else {
+                    $nodes = $this->optimizmeMazenUtils->getNodesInDom($doc, $tag, $object->getContent());
+                }
+
                 if ($nodes->length > 0) {
                     foreach ($nodes as $node) {
                         if ($tag == 'img') {
@@ -300,11 +322,11 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
 
                 if ($boolModified == 1) {
                     // action done: save new content
-                    // span racine to enlever
+                    // root span to remove
                     $newContent = $this->optimizmeMazenUtils->getHtmlFromDom($doc);
 
                     // update
-                    $this->optimizmeMazenUtils->saveObjField($idProduct, 'Description', 'Product', $newContent, $this);
+                    $this->optimizmeMazenUtils->saveObjField($idObject, $field, $type, $newContent, $this);
                 } else {
                     // nothing done
                     $this->addMsgError('Nothing done.');
@@ -317,18 +339,18 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $idPost
      * @param $objData
      */
-    public function updateMetaDescription($idPost, $objData)
+    public function updateObjectMetaDescription($idPost, $objData, $type, $field)
     {
-        $this->optimizmeMazenUtils->saveObjField($idPost, 'MetaDescription', 'Product', $objData->meta_description, $this);
+        $this->optimizmeMazenUtils->saveObjField($idPost, $field, $type, $objData->meta_description, $this);
     }
 
     /**
      * @param $idPost
      * @param $objData
      */
-    public function updateMetaTitle($idPost, $objData)
+    public function updateObjectMetaTitle($idPost, $objData, $type, $field)
     {
-        $this->optimizmeMazenUtils->saveObjField($idPost, 'MetaTitle', 'Product', $objData->meta_title, $this);
+        $this->optimizmeMazenUtils->saveObjField($idPost, $field, $type, $objData->meta_title, $this);
     }
 
     /**
@@ -353,7 +375,7 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $idPost
      * @param $objData
      */
-    public function updatePostStatus($idPost, $objData)
+    public function updateObjectStatus($idPost, $objData, $type, $field)
     {
         if (!isset($objData->is_publish) || $objData->is_publish == 0) {
             $objData->is_publish = 0;
@@ -361,7 +383,7 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
             $objData->is_publish = 1;
         }
 
-        $this->optimizmeMazenUtils->saveObjField($idPost, 'Status', 'Product', $objData->is_publish, $this, 1);
+        $this->optimizmeMazenUtils->saveObjField($idPost, $field, $type, $objData->is_publish, $this, 1);
     }
 
     /**
@@ -369,48 +391,108 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
      * and add a redirection
      * @param $idPost
      * @param $objData
+     * @param $type
+     * @param $field
      */
-    public function updateSlug($idPost, $objData)
+    public function updateObjectSlug($idPost, $objData, $type, $field)
     {
-        /* @var $productInit \Magento\Catalog\Model\Product */
-        /* @var $productExpected \Magento\Catalog\Model\Product */
+        /* @var $objectInit \Magento\Catalog\Model\Product */
+        /* @var $objectExpected \Magento\Catalog\Model\Product */
 
         if (!is_numeric($idPost)) {
             // need more data
-            $this->addMsgError('ID product missing');
+            $this->addMsgError('ID object missing');
         } elseif ($objData->new_slug == '') {
             // no empty
             $this->addMsgError('This field is required');
         } else {
-            // load product init (for after)
+            // load object init (for after)
             $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
-            $productInit = $objectManager->create('Magento\Catalog\Model\Product')->load($idPost);
-            $redirectFrom = $this->productUrlPathGenerator->getUrlPathWithSuffix($productInit, $productInit->getStoreId());
+            if ($type == 'Product' || $type == 'Category') {
+                $namespaceModel = 'Catalog';
+            }
+            else {
+                $namespaceModel = 'Cms';
+            }
+            $objectInit = $objectManager->create('Magento\\'. $namespaceModel .'\Model\\'. $type)->load($idPost);
+
+            // load
+            if ($type == 'Product') {
+                $redirectFrom = $this->productUrlPathGenerator->getUrlPathWithSuffix($objectInit, $objectInit->getStoreId());
+            }
+            elseif ($type == 'Category') {
+                $redirectFrom = $this->categoryUrlPathGenerator->getUrlPathWithSuffix($objectInit, $objectInit->getStoreId());
+            }
+            else {
+                $redirectFrom = $objectInit->getIdentifier();
+            }
 
             // if custom url exists: remove
-            $productExpected = $productInit;
-            $productExpected->setUrlKey($objData->new_slug);
-            $redirectCheck = $this->productUrlPathGenerator->getUrlPathWithSuffix($productExpected, $productExpected->getStoreId());
-            $this->optimizmeMazenRedirections->deleteRedirectionByRequestPath($redirectCheck);
+            $objectExpected = $objectInit;
+            if ($type == 'Product') {
+                $objectExpected->setUrlKey($objData->new_slug);
+                $redirectCheck = $this->productUrlPathGenerator->getUrlPathWithSuffix($objectExpected, $objectExpected->getStoreId());
+            }
+            elseif ($type == 'Category') {
+                $objectExpected->setUrlKey($objData->new_slug);
+                $redirectCheck = $this->categoryUrlPathGenerator->getUrlPathWithSuffix($objectExpected, $objectExpected->getStoreId());
+            }
+            else {
+                $objectExpected->setIdentifier($objData->new_slug);
+                $redirectCheck = $objectExpected->getIdentifier();
+            }
+
+            // is it correct?
+            //$this->optimizmeMazenRedirections->deleteRedirectionByRequestPath($redirectCheck);
 
             // save new url key
-            $productUpdated = $this->optimizmeMazenUtils->saveObjField($idPost, 'UrlKey', 'Product', $objData->new_slug, $this, 1);
+            $objectUpdated = $this->optimizmeMazenUtils->saveObjField($idPost, $field, $type, $objData->new_slug, $this, 1);
 
-            if (!$productUpdated) {
+
+            if (!$objectUpdated) {
                 // no update
             } else {
-                if ($productUpdated->getId() && $productUpdated->getId() != '') {
+
+                if ($type == 'Product' || $type == 'Category') {
+                    $idObjectUpdated = $objectUpdated->getId();
+                }
+                else {
+                    $idObjectUpdated = $objectUpdated->getPageId();
+                }
+
+                if (isset($idObjectUpdated) && $idObjectUpdated != '') {
 
                     // save url key ok : change url
-                    $this->returnAjax['url'] = $productUpdated->getUrlModel()->getUrl($productUpdated);
-                    $this->returnAjax['message'] = 'URL changed';
-                    $this->returnAjax['new_slug'] = $productUpdated->getUrlKey();
-
                     // get redirects (from >> to)
-                    $redirectTo = $this->productUrlPathGenerator->getUrlPathWithSuffix($productUpdated, $productUpdated->getStoreId());
+                    if ($type == 'Product') {
+                        // product
+                        //$idObjectUpdated = $objectUpdated->getId();
+                        $this->returnAjax['url'] = $objectUpdated->getUrlModel()->getUrl($objectUpdated);
+                        $this->returnAjax['new_slug'] = $objectUpdated->getUrlKey();
+                        $redirectTo = $this->productUrlPathGenerator->getUrlPathWithSuffix($objectUpdated, $objectUpdated->getStoreId());
+                        $entityType = 'product';
+                    }
+                    elseif ($type == 'Category') {
+                        // product category
+                        //$idObjectUpdated = $objectUpdated->getId();
+                        $this->returnAjax['url'] = $objectUpdated->getUrl();
+                        $this->returnAjax['new_slug'] = $objectUpdated->getUrlKey();
+                        $redirectTo = $this->categoryUrlPathGenerator->getUrlPathWithSuffix($objectUpdated, $objectUpdated->getStoreId());
+                        $entityType = 'category';
+                    }
+                    else {
+                        // cms page
+                        //$idObjectUpdated = $objectUpdated->getPageId();
+                        $this->returnAjax['url'] = $objectManager->create('Magento\Cms\Helper\Page')->getPageUrl($idObjectUpdated);
+                        $this->returnAjax['new_slug'] = $objectUpdated->getIdentifier();
+                        $redirectTo = $objectUpdated->getIdentifier();
+                        $entityType = 'cms-page';
+                    }
+
+                    $this->returnAjax['message'] = 'URL changed';
 
                     // add custom url rewrite
-                    $this->optimizmeMazenRedirections->addRedirection($productUpdated->getId(), $redirectFrom, $redirectTo, $productUpdated->getStoreId());
+                    $this->optimizmeMazenRedirections->addRedirection($idObjectUpdated, $redirectFrom, $redirectTo, $objectUpdated->getStoreId(), $entityType);
                 }
             }
         }
@@ -421,9 +503,9 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $idPost
      * @param $objData
      */
-    public function setReference($idPost, $objData)
+    public function updateObjectReference($idPost, $objData, $type, $field)
     {
-        $this->optimizmeMazenUtils->saveObjField($idPost, 'Sku', 'Product', $objData->new_reference, $this, 1);
+        $this->optimizmeMazenUtils->saveObjField($idPost, $field, $type, $objData->new_reference, $this, 1);
     }
 
 
@@ -496,87 +578,90 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $idCategory
      * @param $objData
      */
-    public function setCategoryName($idCategory, $objData)
-    {
-        $this->optimizmeMazenUtils->saveObjField($idCategory, 'Name', 'Category', $objData->new_name, $this);
-    }
-
-    /**
-     * @param $idCategory
-     * @param $objData
-     */
     public function setCategoryDescription($idCategory, $objData)
     {
         $this->optimizmeMazenUtils->saveObjField($idCategory, 'Description', 'Category', $objData->description, $this);
     }
 
+
+    ////////////////////////////////////////////////
+    //              PAGES
+    ////////////////////////////////////////////////
+
+
     /**
-     * Change permalink of a post
-     * @param $idCategory
-     * @param $objData
+     * Get cms pages list
      */
-    public function updateCategorySlug($idCategory, $objData)
-    {
-        /* @var $categoryInit \Magento\Catalog\Model\Category */
+    public function getPages(){
+        /* @var $page \Magento\Cms\Model\Page\ */
 
-        if (!is_numeric($idCategory)) {
-            // need more data
-            $this->addMsgError('ID category missing');
-        } elseif ($objData->new_slug == '') {
-            // no empty
-            $this->addMsgError('This field is required');
-        } else {
-            // load category init (for after)
-            $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
-            $categoryInit = $objectManager->create('Magento\Catalog\Model\Category')->load($idCategory);
-            $redirectFrom = $this->categoryUrlPathGenerator->getUrlPathWithSuffix($categoryInit, $categoryInit->getStoreId());
+        $tabResults = array();
+        $productsReturn = array();
 
-            // if custom url exists: remove
-            $categoryExpected = $categoryInit;
-            $categoryExpected->setUrlKey($objData->new_slug);
-            $redirectCheck = $this->categoryUrlPathGenerator->getUrlPathWithSuffix($categoryExpected, $categoryExpected->getStoreId());
-            $this->optimizmeMazenRedirections->deleteRedirectionByRequestPath($redirectCheck);
+        // récupération de la liste des produits
+        $collection = $this->pageCollectionFactory->create();
+        $pages = $collection->getData();
 
-            // save new url key
-            $categoryUpdated = $this->optimizmeMazenUtils->saveObjField($idCategory, 'UrlKey', 'Category', $objData->new_slug, $this, 1);
+        if (count($pages)>0) {
+            foreach ($pages as $pageBoucle) {
+                // get product details
+                $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
+                $page = $objectManager->create('Magento\Cms\Model\Page')->load($pageBoucle['page_id']);
 
-            if (!$categoryUpdated) {
-                // no update
-            } else {
-                if ($categoryUpdated->getId() && $categoryUpdated->getId() != '') {
-
-                    // save url key ok : change url
-                    $this->returnAjax['url'] = $categoryUpdated->getUrl();
-                    $this->returnAjax['message'] = 'URL changed';
-                    $this->returnAjax['new_slug'] = $categoryUpdated->getUrlKey();
-
-                    // get redirects (from >> to)
-                    $redirectTo = $this->categoryUrlPathGenerator->getUrlPathWithSuffix($categoryUpdated, $categoryUpdated->getStoreId());
-
-                    // add custom url rewrite
-                    $this->optimizmeMazenRedirections->addRedirection($categoryUpdated->getId(), $redirectFrom, $redirectTo, $categoryUpdated->getStoreId());
+                if ($page->getTitle() != '') {
+                    if ($page->getIsActive() == 1) {
+                        $status = 'Active';
+                    } else {
+                        $status = 'Unactive';
+                    }
+                    $prodReturn = array(
+                        'ID' => $page->getPageId(),
+                        'post_title' => $page->getTitle(),
+                        'post_status' => $status
+                    );
+                    array_push($productsReturn, $prodReturn);
                 }
             }
         }
+
+        $tabResults['pages'] = $productsReturn;
+        $this->returnAjax['arborescence'] = $tabResults;
     }
 
-    /**
-     * @param $idCategory
-     * @param $objData
-     */
-    public function updateCategoryMetaTitle($idCategory, $objData)
-    {
-        $this->optimizmeMazenUtils->saveObjField($idCategory, 'Meta_title', 'Category', $objData->meta_title, $this);
-    }
 
     /**
-     * @param $idCategory
-     * @param $objData
+     * Get cms page detail
+     * @param $idPost
      */
-    public function updateCategoryMetaDescription($idCategory, $objData)
+    public function getPage($idPost)
     {
-        $this->optimizmeMazenUtils->saveObjField($idCategory, 'Meta_description', 'Category', $objData->meta_description, $this);
+        /* @var $product \Magento\Cms\Model\Page */
+        // get page detail
+        $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
+        $page = $objectManager->create('Magento\Cms\Model\Page')->load($idPost);
+
+        if ($page->getPageId() != '') {
+
+            // is content in "row" for beeing inserted in mazen-dev app
+            if (trim($page->getContent()) != '') {
+                if (!stristr($page->getContent(), '<div class="row')) {
+                    $page->setContent('<div class="row ui-droppable"><div class="col-md-12 col-sm-12 col-xs-12 column"><div class="ge-content ge-content-type-tinymce" data-ge-content-type="tinymce">'. $page->getContent() .'</div></div></div>');
+                }
+            }
+
+            // load and return page data
+            $this->returnAjax['post']['title'] = $page->getTitle();
+            $this->returnAjax['post']['short_description'] = $page->getContentHeading();
+            $this->returnAjax['post']['content'] = $page->getContent();
+            $this->returnAjax['post']['slug'] = $page->getIdentifier();
+            $this->returnAjax['post']['url'] = $objectManager->create('Magento\Cms\Helper\Page')->getPageUrl($page->getPageId());
+            $this->returnAjax['post']['publish'] = $page->getIsActive();
+            $this->returnAjax['post']['meta_title'] = $page->getMetaTitle();
+            $this->returnAjax['post']['meta_description'] = $page->getMetaDescription();
+        }
     }
+
+
 
 
 
@@ -616,7 +701,7 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
     {
         if (!isset($objData->id_redirection) || $objData->id_redirection == '') {
             // need more data
-            array_push($this->tabErrors, __('Redirection non trouvée', 'optimizme'));
+            array_push($this->tabErrors, 'Redirection not found');
         } else {
             $this->optimizmeMazenRedirections->deleteRedirection($objData->id_redirection);
         }
