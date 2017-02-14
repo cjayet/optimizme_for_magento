@@ -85,6 +85,7 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
                 // get product details
                 $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
                 $product = $objectManager->create('Magento\Catalog\Model\Product')->load($productBoucle['entity_id']);
+                $productUrl = $product->getUrlModel()->getUrl($product);
 
                 if ($product->getName() != '') {
                     if ($product->getStatus() == 1) {
@@ -95,7 +96,8 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
                     $prodReturn = array(
                         'ID' => $product->getId(),
                         'post_title' => $product->getName(),
-                        'post_status' => $status
+                        'post_status' => $status,
+                        'url' => $productUrl
                     );
                     array_push($productsReturn, $prodReturn);
                 }
@@ -610,9 +612,9 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
 
                 if ($page->getTitle() != '') {
                     if ($page->getIsActive() == 1) {
-                        $status = 'Active';
+                        $status = 'publish';
                     } else {
-                        $status = 'Unactive';
+                        $status = 'draft';
                     }
                     $prodReturn = array(
                         'ID' => $page->getPageId(),
@@ -774,6 +776,7 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
 
         // return results
         header("Access-Control-Allow-Origin: *");
+        header('Content-Type: application/json');
         echo json_encode($this->returnResult);
     }
 
@@ -793,6 +796,7 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
 
         // return results
         header("Access-Control-Allow-Origin: *");
+        header('Content-Type: application/json');
         echo json_encode($this->returnResult);
     }
 

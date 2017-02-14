@@ -53,17 +53,23 @@ class Index extends \Magento\Framework\App\Action\Action
         // load JWT
         $this->OPTIMIZME_MAZEN_JWT_SECRET = $optimizmeMazenUtils->getJwtKey();
 
+        $isDataFormMazen = false;
+
         if (isset($_REQUEST['data_optme'])) {
             // $_POST/$_GET
             $requestDataOptme = new \stdClass();
             $requestDataOptme->data_optme = $_REQUEST['data_optme'];
             $requestDataOptme = json_encode($requestDataOptme);
+            $isDataFormMazen = true;
         } else {
             // try to get application/json content
             $requestDataOptme = stripslashes(file_get_contents('php://input'));
+            if (strstr($requestDataOptme, 'data_optme')) {
+                $isDataFormMazen = true;
+            }
         }
 
-        if (isset($requestDataOptme) && $requestDataOptme != '') {
+        if (isset($requestDataOptme) && $requestDataOptme != '' && $isDataFormMazen == true) {
             $jsonData = json_decode($requestDataOptme);
             if (!isset($jsonData->data_optme) || $jsonData->data_optme == '') {
                 exit;
@@ -85,23 +91,6 @@ class Index extends \Magento\Framework\App\Action\Action
                         $optimizmeMazenAction->setMsgReturn($msg, 'danger');
                         die;
                     }
-
-                    // log action
-                    /*
-                    $logContent = "\n--------------\n". 'Date '. date('Y-m-d H:i:s') ."\n";
-                    $logContent .= 'Data: '. $requestDataOptme . "\n";
-
-                    try {
-                        if (is_writable($tOPTIMIZME_MAZEN_LOGS)) {
-                            if ($handle = fopen(OPTIMIZME_MAZEN_LOGS, 'a+')) {
-                                fwrite($handle, $logContent);
-                                fclose($handle);
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        // no log
-                    }
-                    */
                 }
             } else {
                 // simple JSON, only for "register_cms" action
