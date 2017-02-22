@@ -55,10 +55,12 @@ class Index extends \Magento\Framework\App\Action\Action
 
         $isDataFormMazen = false;
 
-        if (isset($_REQUEST['data_optme'])) {
-            // $_POST/$_GET
+        $getRequestDataOtpme = $this->getRequest()->getParam('data_optme');
+
+        if (isset($getRequestDataOtpme) && $getRequestDataOtpme != '') {
+            // request found
             $requestDataOptme = new \stdClass();
-            $requestDataOptme->data_optme = $_REQUEST['data_optme'];
+            $requestDataOptme->data_optme = $getRequestDataOtpme;
             $requestDataOptme = json_encode($requestDataOptme);
             $isDataFormMazen = true;
         } else {
@@ -137,6 +139,9 @@ class Index extends \Magento\Framework\App\Action\Action
                     case 'set_product_title':
                         $optimizmeMazenAction->updateObjectTitle($postId, $dataOptimizme, 'Product', 'Name');
                         break;
+                    case 'set_product_reference':
+                        $optimizmeMazenAction->updateObjectReference($postId, $dataOptimizme, 'Product', 'Sku');
+                        break;
                     case 'set_product_content':
                         $optimizmeMazenAction->updateObjectContent($postId, $dataOptimizme, 'Product', 'Description');
                         break;
@@ -161,8 +166,23 @@ class Index extends \Magento\Framework\App\Action\Action
                     case 'set_product_hrefattributes':
                         $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'a', 'Product', 'Description');
                         break;
-                    case 'set_product_reference':
-                        $optimizmeMazenAction->updateObjectReference($postId, $dataOptimizme, 'Product', 'Sku');
+                    case 'set_product_h1':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'h1', 'Product', 'Description');
+                        break;
+                    case 'set_product_h2':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'h2', 'Product', 'Description');
+                        break;
+                    case 'set_product_h3':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'h3', 'Product', 'Description');
+                        break;
+                    case 'set_product_h4':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'h4', 'Product', 'Description');
+                        break;
+                    case 'set_product_h5':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'h5', 'Product', 'Description');
+                        break;
+                    case 'set_product_h6':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'h6', 'Product', 'Description');
                         break;
 
                     // CMS pages
@@ -198,6 +218,24 @@ class Index extends \Magento\Framework\App\Action\Action
                         break;
                     case 'set_post_hrefattributes':
                         $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'a', 'Page', 'Content');
+                        break;
+                    case 'set_post_h1':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'h1', 'Page', 'Content');
+                        break;
+                    case 'set_post_h2':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'h2', 'Page', 'Content');
+                        break;
+                    case 'set_post_h3':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'h3', 'Page', 'Content');
+                        break;
+                    case 'set_post_h4':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'h4', 'Page', 'Content');
+                        break;
+                    case 'set_post_h5':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'h5', 'Page', 'Content');
+                        break;
+                    case 'set_post_h6':
+                        $optimizmeMazenAction->updateObjectAttributesTag($postId, $dataOptimizme, 'h6', 'Page', 'Content');
                         break;
 
                     // product categories
@@ -247,7 +285,7 @@ class Index extends \Magento\Framework\App\Action\Action
                     if (is_array($optimizmeMazenAction->tabErrors) && count($optimizmeMazenAction->tabErrors) > 0) {
                         $optimizmeMazenAction->returnResult['result'] = 'danger';
                         $msg = 'Une ou plusieurs erreurs ont été levées : ';
-                        $msg .= $optimizmeMazenUtils->getListMessages($optimizmeMazenAction->tabErrors, 1);
+                        $msg .= $optimizmeMazenUtils->getListMessages($optimizmeMazenAction->tabErrors);
                         $optimizmeMazenAction->setMsgReturn($msg, 'danger');
                     } elseif (is_array($optimizmeMazenAction->returnAjax) && count($optimizmeMazenAction->returnAjax) > 0) {
                         // ajax to return - encode data

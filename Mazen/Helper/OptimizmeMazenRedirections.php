@@ -3,6 +3,7 @@ namespace Optimizmeformagento\Mazen\Helper;
 
 /**
  * Class OptimizmeMazenRedirections
+ *
  * @package Optimizmeformagento\Mazen\Helper
  */
 class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractHelper
@@ -12,12 +13,14 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
     protected $urlRewrite;
     protected $optimizmeMazenUtils;
 
+
     /**
      * OptimizmeMazenRedirections constructor.
-     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
+     *
+     * @param \Magento\Store\Model\StoreManagerInterface  $storeManager
      * @param \Magento\UrlRewrite\Model\UrlRewriteFactory $urlRewriteFactory
-     * @param \Magento\UrlRewrite\Model\UrlRewrite $urlRewrite
-     * @param OptimizmeMazenUtils $optimizmeMazenUtils
+     * @param \Magento\UrlRewrite\Model\UrlRewrite        $urlRewrite
+     * @param OptimizmeMazenUtils                         $optimizmeMazenUtils
      */
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $storeManager,
@@ -25,14 +28,17 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
         \Magento\UrlRewrite\Model\UrlRewrite $urlRewrite,
         \Optimizmeformagento\Mazen\Helper\OptimizmeMazenUtils $optimizmeMazenUtils
     ) {
-        $this->storeManager = $storeManager;
-        $this->urlRewriteFactory = $urlRewriteFactory;
-        $this->urlRewrite = $urlRewrite;
+        $this->storeManager        = $storeManager;
+        $this->urlRewriteFactory   = $urlRewriteFactory;
+        $this->urlRewrite          = $urlRewrite;
         $this->optimizmeMazenUtils = $optimizmeMazenUtils;
-    }
+
+    }//end __construct()
 
 
-    /** add a redirection in url_rewrite */
+    /**
+     * add a redirection in url_rewrite
+     */
     public function addRedirection($entityId, $oldUrl, $newUrl, $storeId, $entityType)
     {
         $result = '';
@@ -41,7 +47,7 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
         if ($oldUrl != $newUrl) {
             // check if url already exists
             $redirection = $this->getRedirectionByRequestPath($oldUrl);
-            if (is_array($redirection) && count($redirection)>0) {
+            if (is_array($redirection) && count($redirection) > 0) {
                 // update
                 $urlRewrite = $this->urlRewrite->load($redirection['url_rewrite_id']);
                 $urlRewrite->setTargetPath($newUrl);
@@ -52,7 +58,8 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
                     ->setEntityId($entityId)
                     ->setRequestPath($oldUrl)
                     ->setTargetPath($newUrl)
-                    ->setEntityType($entityType)    // custom?
+                    ->setEntityType($entityType)
+                // custom?
                     ->setRedirectType('301')
                     ->setStoreId($storeId)
                     ->save();
@@ -62,10 +69,12 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
             $this->optimizmeMazenUtils->changeAllLinksInPostContent($oldUrl, $newUrl);
         } else {
             $result = 'same';
-        }
+        }//end if
 
         return $result;
-    }
+
+    }//end addRedirection()
+
 
     /**
      * @param $id
@@ -76,7 +85,9 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
         if ($redirectionToDelete->getId() && is_numeric($redirectionToDelete->getId())) {
             $redirectionToDelete->delete();
         }
-    }
+
+    }//end deleteRedirection()
+
 
     /**
      * @param $requestPath
@@ -89,7 +100,7 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
             ->addFieldToFilter('request_path', $requestPath)
             ->getData();
 
-        if (is_array($magRedirections) && count($magRedirections)>0) {
+        if (is_array($magRedirections) && count($magRedirections) > 0) {
             foreach ($magRedirections as $magRedirection) {
                 $customUrl = $this->urlRewriteFactory->create()->load($magRedirection['url_rewrite_id']);
                 if ($customUrl && $customUrl->getId()) {
@@ -97,8 +108,11 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
                 }
             }
         }
+
         return $magRedirections;
-    }
+
+    }//end deleteRedirectionByRequestPath()
+
 
     /**
      * @param string $statut
@@ -112,7 +126,9 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
             ->getData();
 
         return $magRedirections;
-    }
+
+    }//end getAllRedirections()
+
 
     /**
      * @param $oldUrl
@@ -128,5 +144,8 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
             ->getData();
 
         return $magRedirections;
-    }
-}
+
+    }//end getRedirectionByRequestPath()
+
+
+}//end class

@@ -3,6 +3,7 @@ namespace Optimizmeformagento\Mazen\Helper;
 
 /**
  * Class OptimizmeMazenUtils
+ *
  * @package Optimizmeformagento\Mazen\Helper
  */
 class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
@@ -14,13 +15,16 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
     protected $scopeConfig;
     protected $cacheTypeList;
     protected $cacheFrontendPool;
+    protected $io;
+
 
     /**
      * OptimizmeMazenUtils constructor.
-     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
-     * @param \Magento\Cms\Model\Wysiwyg\Config $wysiwyg
-     * @param \Magento\Framework\App\Filesystem\DirectoryList $directory_list
-     * @param \Magento\Config\Model\ResourceModel\Config $resourceConfig
+     *
+     * @param \Magento\Store\Model\StoreManagerInterface         $storeManager
+     * @param \Magento\Cms\Model\Wysiwyg\Config                  $wysiwyg
+     * @param \Magento\Framework\App\Filesystem\DirectoryList    $directory_list
+     * @param \Magento\Config\Model\ResourceModel\Config         $resourceConfig
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      */
     public function __construct(
@@ -30,21 +34,24 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Config\Model\ResourceModel\Config $resourceConfig,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList,
-        \Magento\Framework\App\Cache\Frontend\Pool $cacheFrontendPool
-
+        \Magento\Framework\App\Cache\Frontend\Pool $cacheFrontendPool,
+        \Magento\Framework\Filesystem\Io\File $io
     ) {
-        $this->storeManager = $storeManager;
-        $this->wysiwygDirectory = $wysiwyg::IMAGE_DIRECTORY;
-        $this->directoryList = $directory_list;
-        $this->resourceConfig = $resourceConfig;
-        $this->scopeConfig = $scopeConfig;
-        $this->cacheTypeList = $cacheTypeList;
+        $this->storeManager      = $storeManager;
+        $this->wysiwygDirectory  = $wysiwyg::IMAGE_DIRECTORY;
+        $this->directoryList     = $directory_list;
+        $this->resourceConfig    = $resourceConfig;
+        $this->scopeConfig       = $scopeConfig;
+        $this->cacheTypeList     = $cacheTypeList;
         $this->cacheFrontendPool = $cacheFrontendPool;
-    }
+        $this->io                = $io;
+
+    }//end __construct()
 
 
     /**
      * Dump formatted content
+     *
      * @param $s
      */
     public function nice($s)
@@ -52,35 +59,33 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
         echo '<pre>';
         print_r($s);
         echo'</pre>';
-    }
+
+    }//end nice()
+
 
     /**
      * Return list of messages
-     * @param $tabMessages
+     *
+     * @param  $tabMessages
      * @return string
      */
-    public function getListMessages($tabMessages, $list=0)
+    public function getListMessages($tabMessages)
     {
-        $msg = '';
-        if (is_array($tabMessages) && count($tabMessages)>0) {
-            if ($list == 1) {
-                $msg .= '<ul>';
-                foreach ($tabMessages as $message) {
-                    $msg .= '<li>'. $message .'</li>';
-                }
-                $msg .= '</ul>';
-            } else {
-                foreach ($tabMessages as $message) {
-                    $msg .= $message;
-                }
+        $msgReturn = array();
+        if (is_array($tabMessages) && count($tabMessages) > 0) {
+            foreach ($tabMessages as $message) {
+                array_push($msgReturn, $message);
             }
         }
-        return $msg;
-    }
+
+        return $msgReturn;
+
+    }//end getListMessages()
+
 
     /**
      * @param $message
-     * @param string $statut : updated / error
+     * @param string  $statut : updated / error
      */
     public function showMessageBackoffice($message, $statut='updated')
     {
@@ -90,24 +95,25 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
         </div>
         <?php
 
-    }
+    }//end showMessageBackoffice()
+
 
     /**
      * Check if media exists in media library (search by title)
-     * @param $urlFile
+     *
+     * @param  $urlFile
      * @return bool
      */
     public function isMediaInLibrary($urlFile)
     {
         $storeBaseUrl = $this->storeManager->getStore()->getBaseUrl();
         if (!stristr($urlFile, $storeBaseUrl)) {
-
             // different: copy to CMS
             $basenameFile = basename($urlFile);
-            $folder = $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) .'/'. $this->wysiwygDirectory;
+            $folder       = $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA).'/'.$this->wysiwygDirectory;
 
-            if (file_exists($folder .'/'. $basenameFile)) {
-                return $folder .'/'. $basenameFile;
+            if (file_exists($folder.'/'.$basenameFile)) {
+                return $folder.'/'.$basenameFile;
             } else {
                 return false;
             }
@@ -115,38 +121,44 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
             // same: image already in prestashop
             return $urlFile;
         }
-    }
+
+    }//end isMediaInLibrary()
+
 
     /**
      * Add media in library
-     * @param $urlFile : URL where to download and copy file
+     *
+     * @param  $urlFile : URL where to download and copy file
      * @return false|string
      */
     public function addMediaInLibrary($urlFile)
     {
-        $uploaddir = $this->directoryList->getPath('media') .'/'. $this->wysiwygDirectory;
-        if (!is_dir($uploaddir)){
-            mkdir($uploaddir, 0775);
+        $uploaddir = $this->directoryList->getPath('media').'/'.$this->wysiwygDirectory;
+        if (!is_dir($uploaddir)) {
+            $this->io->mkdir($this->directoryList->getPath('media').'/import/images', 0775);
         }
-        $urldir = $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) .'/'. $this->wysiwygDirectory;
 
-        $nameFile = basename($urlFile);
-        $uploadfile = $uploaddir .'/'. $nameFile;
+        $urldir = $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA).'/'.$this->wysiwygDirectory;
+
+        $nameFile   = basename($urlFile);
+        $uploadfile = $uploaddir.'/'.$nameFile;
 
         if (strstr($urlFile, 'passerelle.dev')) {
             $urlFile = 'http://www.w3schools.com/css/img_fjords.jpg';
-        }       // TODO gérer en prod
+        }       //end if
 
         // write file in media
         try {
             copy($urlFile, $uploadfile);
 
-            $newUrl = $urldir .'/'. $nameFile;
+            $newUrl = $urldir.'/'.$nameFile;
             return $newUrl;
         } catch (\Exception $e) {
             return false;
         }
-    }
+
+    }//end addMediaInLibrary()
+
 
     /**
      *
@@ -163,65 +175,106 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
                 return true;
             }
         }
+
         return false;
-    }
+
+    }//end isFileMedia()
+
 
     /**
      * @return array
      */
     public function getAuthorizedMediaExtension()
     {
-        $tabExtensions = array( 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'svg', //Images
-            'doc', 'docx', 'rtf', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ots', 'ott', 'odb', 'odg', 'otp', 'otg', 'odf', 'ods', 'odp' // files
-        );
+        $tabExtensions = array(
+                          'jpg',
+                          'jpeg',
+                          'png',
+                          'gif',
+                          'bmp',
+                          'tiff',
+                          'svg',
+        // Images
+                          'doc',
+                          'docx',
+                          'rtf',
+                          'pdf',
+                          'xls',
+                          'xlsx',
+                          'ppt',
+                          'pptx',
+                          'odt',
+                          'ots',
+                          'ott',
+                          'odb',
+                          'odg',
+                          'otp',
+                          'otg',
+                          'odf',
+                          'ods',
+                          'odp',
+        // files
+                         );
         return $tabExtensions;
-    }
+
+    }//end getAuthorizedMediaExtension()
+
 
     /**
      * Get Dom from html
      *  and add a "<span>" tag in top
-     * @param $doc
-     * @param $tag
-     * @param $content
+     *
+     * @param  $doc
+     * @param  $tag
+     * @param  $content
      * @return \DOMNodeList
      */
     public function getNodesInDom($doc, $tag, $content)
     {
-        /* @var $doc \DOMDocument */
+        /*
+            @var $doc \DOMDocument */
         // load post content in DOM
         libxml_use_internal_errors(true);
         $doc->loadHTML('<span>'.$content.'</span>');
         libxml_clear_errors();
 
         // get all images in post content
-        $xp = new \DOMXPath($doc);
+        $xp    = new \DOMXPath($doc);
         $nodes = $xp->query('//'.$tag);
         return $nodes;
-    }
+
+    }//end getNodesInDom()
+
 
     /**
      * Get HTML from dom document
      *  and remove "<span>" tag in top
-     * @param $doc
+     *
+     * @param  $doc
      * @return string
      */
     public function getHtmlFromDom($doc)
     {
-        /* @var $doc \DOMDocument */
-        /* @var $racine \DOMNode */
-        $racine = $doc->getElementsByTagName('span')->item(0);
+        /*
+            @var $doc \DOMDocument */
+        // @var $racine \DOMNode
+        $racine     = $doc->getElementsByTagName('span')->item(0);
         $newContent = '';
         if ($racine->hasChildNodes()) {
             foreach ($racine->childNodes as $node) {
                 $newContent .= utf8_decode($doc->saveHTML($node));
             }
         }
+
         return $newContent;
-    }
+
+    }//end getHtmlFromDom()
+
 
     /**
      * Clean content before saving
-     * @param $content
+     *
+     * @param  $content
      * @return mixed
      */
     public function cleanHtmlFromMazen($content)
@@ -232,7 +285,9 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
         $content = str_replace('class=""', '', $content);
 
         return trim($content);
-    }
+
+    }//end cleanHtmlFromMazen()
+
 
     /**
      * @param $oldUrl
@@ -241,7 +296,8 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
     public function changeAllLinksInPostContent($oldUrl, $newUrl)
     {
         // TODO
-    }
+    }//end changeAllLinksInPostContent()
+
 
     /**
      * @param $idProduct
@@ -249,53 +305,48 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $type
      * @param $value
      * @param $objAction
-     * @param int $isRequired
+     * @param int       $isRequired
      * @return bool|\Magento\Catalog\Model\Product
      */
     public function saveObjField($idProduct, $field, $type, $value, $objAction, $isRequired=0)
     {
-        /* @var $objAction OptimizmeMazenActions */
-
+        // @var $objAction OptimizmeMazenActions
         if (!is_numeric($idProduct)) {
             // need more data
             $objAction->addMsgError('ID element missing');
-        } elseif ($isRequired == 1 && ($value == '' && $value !== 0)) {
+        } else if ($isRequired == 1 && ($value == '' && $value !== 0)) {
             // no empty
             $objAction->addMsgError('This field is required');
-        } elseif (!isset($value)) {
+        } else if (!isset($value)) {
             // need more data
-            $objAction->addMsgError('Function '. $field .' missing');
+            $objAction->addMsgError('Function '.$field.' missing');
         } else {
             // all is ok: try to save
             // get product/category/page details
             if ($type == 'Product') {
                 $namespaceUsedModel = 'Catalog';
-            }
-            elseif ($type == 'Category') {
+            } else if ($type == 'Category') {
                 $namespaceUsedModel = 'Catalog';
-            }
-            else {
+            } else {
                 $namespaceUsedModel = 'Cms';
             }
 
-            $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
-            $object = $objectManager->create('Magento\\'. $namespaceUsedModel .'\Model\\'. $type)->load($idProduct);
+            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+            $object        = $objectManager->create('Magento\\'.$namespaceUsedModel.'\Model\\'.$type)->load($idProduct);
 
             if ($namespaceUsedModel == 'Catalog') {
                 $idObj = $object->getId();
-            }
-            else {
+            } else {
                 $idObj = $object->getPageId();
             }
 
-
-            /* @var \Magento\Catalog\Model\Product $object */
+            // @var \Magento\Catalog\Model\Product $object
             if ($idObj == '') {
                 $objAction->addMsgError('Loading element failed', 1);
             } else {
                 // update if different
-                $setter = 'set'. $field;
-                $getter = 'get'. $field;
+                $setter = 'set'.$field;
+                $getter = 'get'.$field;
 
                 $currentValue = $object->$getter();
                 if ($currentValue != $value) {
@@ -306,15 +357,17 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
 
                         return $object;
                     } catch (\Exception $e) {
-                        $objAction->addMsgError('Object not saved, '. $e->getMessage(), 1);
+                        $objAction->addMsgError('Object not saved, '.$e->getMessage(), 1);
                     }
                 }
             }
-        }
+        }//end if
 
         // error somewhere
         return false;
-    }
+
+    }//end saveObjField()
+
 
     /**
      * @param $idStore
@@ -323,7 +376,9 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
     public function getStoreBaseUrl($idStore)
     {
         return $this->storeManager->getStore($idStore)->getBaseUrl();
-    }
+
+    }//end getStoreBaseUrl()
+
 
     /**
      * @param int $length
@@ -331,12 +386,21 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function generateKeyForJwt($length=64)
     {
-        $key = substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ceil($length/strlen($x)))), 1, $length);
+        // generate
+        $key = substr(str_shuffle(str_repeat($x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ceil($length / strlen($x)))), 1, $length);
+
+        // save
+        $this->saveJwtKey($key);
+
         return $key;
-    }
+
+    }//end generateKeyForJwt()
+
 
     /**
-     * @param $keyJWT
+     * Save JWT key
+     *
+     * @param key $keyJWT is the key to save
      */
     public function saveJwtKey($keyJWT)
     {
@@ -349,10 +413,14 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
 
         // flush cache config to update key
         $this->cacheConfigClean();
-    }
+
+    }//end saveJwtKey()
+
 
     /**
-     *  Get saved JWT key
+     * Get saved JWT key
+     *
+     * @return mixed|string
      */
     public function getJwtKey()
     {
@@ -360,12 +428,17 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
         if (is_null($key)) {
             $key = '';
         }
+
         return $key;
-    }
+
+    }//end getJwtKey()
+
 
     /**
      * Is param a JWT?
-     * @param $s
+     *
+     * @param string $s to analyze
+     *
      * @return bool
      */
     public function optMazenIsJwt($s)
@@ -373,30 +446,35 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
         if (is_array($s)) {
             return false;
         }
+
         if (is_object($s)) {
             return false;
         }
+
         if (substr_count($s, '.') != 2) {
             return false;
         }
+
         if (strstr($s, '{')) {
             return false;
         }
+
         if (strstr($s, '}')) {
             return false;
         }
+
         if (strstr($s, ':')) {
             return false;
         }
 
-        // all tests OK, JWT
+        // all tests OK, seems JWT
         return true;
-    }
 
+    }//end optMazenIsJwt()
 
 
     /**
-     *  clean config cache
+     * Clean config cache
      */
     public function cacheConfigClean()
     {
@@ -405,11 +483,15 @@ class OptimizmeMazenUtils extends \Magento\Framework\App\Helper\AbstractHelper
             foreach ($types as $type) {
                 $this->cacheTypeList->cleanType($type);
             }
+
             foreach ($this->cacheFrontendPool as $cacheFrontend) {
                 $cacheFrontend->getBackend()->clean();
             }
         } catch (\Exception $e) {
             echo $msg = 'Error : '.$e->getMessage();
         }
-    }
-}
+
+    }//end cacheConfigClean()
+
+
+}//end class
