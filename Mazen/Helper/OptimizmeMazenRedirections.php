@@ -8,10 +8,10 @@ namespace Optimizmeformagento\Mazen\Helper;
  */
 class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractHelper
 {
-    protected $storeManager;
-    protected $urlRewriteFactory;
-    protected $urlRewrite;
-    protected $optimizmeMazenUtils;
+    private $storeManager;
+    private $urlRewriteFactory;
+    private $urlRewrite;
+    private $optimizmeMazenUtils;
 
 
     /**
@@ -32,7 +32,6 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
         $this->urlRewriteFactory   = $urlRewriteFactory;
         $this->urlRewrite          = $urlRewrite;
         $this->optimizmeMazenUtils = $optimizmeMazenUtils;
-
     }//end __construct()
 
 
@@ -72,7 +71,6 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
         }//end if
 
         return $result;
-
     }//end addRedirection()
 
 
@@ -85,7 +83,6 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
         if ($redirectionToDelete->getId() && is_numeric($redirectionToDelete->getId())) {
             $redirectionToDelete->delete();
         }
-
     }//end deleteRedirection()
 
 
@@ -110,7 +107,6 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
         }
 
         return $magRedirections;
-
     }//end deleteRedirectionByRequestPath()
 
 
@@ -118,7 +114,7 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
      * @param string $statut
      * @return array
      */
-    public function getAllRedirections($statut='custom')
+    public function getAllRedirections($statut = 'custom')
     {
         $magRedirections = $this->urlRewriteFactory->create()
             ->getCollection()
@@ -126,7 +122,6 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
             ->getData();
 
         return $magRedirections;
-
     }//end getAllRedirections()
 
 
@@ -144,8 +139,5 @@ class OptimizmeMazenRedirections extends \Magento\Framework\App\Helper\AbstractH
             ->getData();
 
         return $magRedirections;
-
     }//end getRedirectionByRequestPath()
-
-
 }//end class

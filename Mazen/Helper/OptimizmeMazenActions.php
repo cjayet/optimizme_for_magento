@@ -15,16 +15,16 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
     public $tabSuccess;
     public $returnAjax;
 
-    protected $productCollectionFactory;
-    protected $pageCollectionFactory;
-    protected $categoryCollectionFactory;
-    protected $urlRewriteFactory;
-    protected $productUrlPathGenerator;
-    protected $categoryUrlPathGenerator;
-    protected $jsonHelper;
-    protected $user;
-    protected $optimizmeMazenUtils;
-    protected $optimizmeMazenRedirections;
+    private $productCollectionFactory;
+    private $pageCollectionFactory;
+    private $categoryCollectionFactory;
+    private $urlRewriteFactory;
+    private $productUrlPathGenerator;
+    private $categoryUrlPathGenerator;
+    private $jsonHelper;
+    private $user;
+    private $optimizmeMazenUtils;
+    private $optimizmeMazenRedirections;
 
 
     /**
@@ -60,10 +60,10 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
         $this->optimizmeMazenRedirections = $optimizmeMazenRedirections;
 
         // tab messages and returns
-        $this->returnResult = array();
-        $this->tabErrors = array();
-        $this->tabSuccess = array();
-        $this->returnAjax = array();
+        $this->returnResult = [];
+        $this->tabErrors = [];
+        $this->tabSuccess = [];
+        $this->returnAjax = [];
     }
 
 
@@ -78,8 +78,8 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
     {
         /* @var $product \Magento\Catalog\Model\Product */
 
-        $tabResults = array();
-        $productsReturn = array();
+        $tabResults = [];
+        $productsReturn = [];
 
         // récupération de la liste des produits
         $collection = $this->productCollectionFactory->create();
@@ -88,19 +88,18 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
 
         if (count($products)>0) {
             foreach ($products as $productBoucle) {
-
                 // get product details
                 $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
                 $product = $objectManager->create('Magento\Catalog\Model\Product')->load($productBoucle['entity_id']);
                 $productUrl = $product->getUrlModel()->getUrl($product);
 
                 if ($product->getName() != '') {
-                    $prodReturn = array(
+                    $prodReturn = [
                         'ID' => $product->getId(),
                         'title' => $product->getName(),
                         'publish' => $product->getStatus(),
                         'url' => $productUrl
-                    );
+                    ];
                     array_push($productsReturn, $prodReturn);
                 }
             }
@@ -123,7 +122,6 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
         $product = $objectManager->create('Magento\Catalog\Model\Product')->load($idPost);
 
         if ($product->getId() != '') {
-
             // check si le contenu est bien compris dans une balise "row" pour qu'il soit bien inclus dans l'éditeur
             if (trim($product->getDescription()) != '') {
                 if (!stristr($product->getDescription(), '<div class="row')) {
@@ -132,15 +130,15 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
             }
 
             // load and return product data
-            $this->returnAjax['post']['title'] = $product->getName();
-            $this->returnAjax['post']['reference'] = $product->getSku();
-            $this->returnAjax['post']['short_description'] = $product->getShortDescription();
-            $this->returnAjax['post']['content'] = $product->getDescription();
-            $this->returnAjax['post']['slug'] = $product->getUrlKey();
-            $this->returnAjax['post']['url'] = $product->getUrlModel()->getUrl($product);
-            $this->returnAjax['post']['publish'] = $product->getStatus();
-            $this->returnAjax['post']['meta_title'] = $product->getMetaTitle();
-            $this->returnAjax['post']['meta_description'] = $product->getMetaDescription();
+            $this->returnAjax['product']['title'] = $product->getName();
+            $this->returnAjax['product']['reference'] = $product->getSku();
+            $this->returnAjax['product']['short_description'] = $product->getShortDescription();
+            $this->returnAjax['product']['content'] = $product->getDescription();
+            $this->returnAjax['product']['slug'] = $product->getUrlKey();
+            $this->returnAjax['product']['url'] = $product->getUrlModel()->getUrl($product);
+            $this->returnAjax['product']['publish'] = $product->getStatus();
+            $this->returnAjax['product']['meta_title'] = $product->getMetaTitle();
+            $this->returnAjax['product']['meta_description'] = $product->getMetaDescription();
         }
     }
 
@@ -171,7 +169,6 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
             // need more data
             $this->addMsgError('Content not found', 1);
         } else {
-
             // copy media files to Magento img
             $doc = new \DOMDocument;
             libxml_use_internal_errors(true);
@@ -182,12 +179,12 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
             $xp = new \DOMXPath($doc);
 
             // tags to parse and attributes to transform
-            $tabParseScript = array(
+            $tabParseScript = [
                 'img' => 'src',
                 'a' => 'href',
                 'video' => 'src',
                 'source' => 'src'
-            );
+            ];
 
             foreach ($tabParseScript as $tag => $attr) {
                 foreach ($xp->query('//'.$tag) as $node) {
@@ -461,7 +458,6 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
                 }
 
                 if (isset($idObjectUpdated) && $idObjectUpdated != '') {
-
                     // save url key ok : change url
                     // get redirects (from >> to)
                     if ($type == 'Product') {
@@ -509,7 +505,6 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
 
 
 
-
     ////////////////////////////////////////////////
     //              PRODUCT CATEGORIES
     ////////////////////////////////////////////////
@@ -521,26 +516,27 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
     {
 
         /* @var $category \Magento\Catalog\Model\Category */
-        $tabResults = array();
+        $tabResults = [];
 
         // don't get root category
         $categories = $this->categoryCollectionFactory->create()->getData();
 
         if (count($categories)>0) {
             foreach ($categories as $categoryLoop) {
-
                 // get category details
                 $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
                 $category = $objectManager->create('Magento\Catalog\Model\Category')->load($categoryLoop['entity_id']);
 
-                $categoryInfos = array(
-                    'id' => $category->getId(),
-                    'name' => $category->getName(),
-                    'description' => $category->getDescription(),
-                    'slug' => $category->getUrlKey()
-                );
+                if ($category->getLevel() > 0) {
+                    $categoryInfos = [
+                        'id' => $category->getId(),
+                        'name' => $category->getName(),
+                        'description' => $category->getDescription(),
+                        'slug' => $category->getUrlKey()
+                    ];
 
-                array_push($tabResults, $categoryInfos);
+                    array_push($tabResults, $categoryInfos);
+                }
             }
         }
 
@@ -553,7 +549,7 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
     public function loadCategoryContent($elementId)
     {
         /* @var $category \Magento\Catalog\Model\Category */
-        $tabCategory = array();
+        $tabCategory = [];
 
         // get category details
         $objectManager =  \Magento\Framework\App\ObjectManager::getInstance();
@@ -573,15 +569,6 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
         $this->returnAjax['category'] = $tabCategory;
     }
 
-    /**
-     * @param $idCategory
-     * @param $objData
-     */
-    public function setCategoryDescription($idCategory, $objData)
-    {
-        $this->optimizmeMazenUtils->saveObjField($idCategory, 'Description', 'Category', $objData->description, $this);
-    }
-
 
     ////////////////////////////////////////////////
     //              PAGES
@@ -595,8 +582,8 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
     {
         /* @var $page \Magento\Cms\Model\Page\ */
 
-        $tabResults = array();
-        $productsReturn = array();
+        $tabResults = [];
+        $productsReturn = [];
 
         // récupération de la liste des produits
         $collection = $this->pageCollectionFactory->create();
@@ -610,12 +597,12 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
                 $url = $objectManager->create('Magento\Cms\Helper\Page')->getPageUrl($pageBoucle['page_id']);
 
                 if ($page->getTitle() != '') {
-                    $prodReturn = array(
+                    $prodReturn = [
                         'ID' => $page->getPageId(),
                         'title' => $page->getTitle(),
                         'publish' => $page->getIsActive(),
                         'url' => $url
-                    );
+                    ];
                     array_push($productsReturn, $prodReturn);
                 }
             }
@@ -624,7 +611,6 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
         $tabResults['pages'] = $productsReturn;
         $this->returnAjax['arborescence'] = $tabResults;
     }
-
 
     /**
      * Get cms page detail
@@ -639,7 +625,6 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
         $page = $objectManager->create('Magento\Cms\Model\Page')->load($idPost);
 
         if ($page->getPageId() != '') {
-
             // is content in "row" for beeing inserted in mazen-dev app
             if (trim($page->getContent()) != '') {
                 if (!stristr($page->getContent(), '<div class="row')) {
@@ -661,8 +646,6 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
 
 
 
-
-
     ////////////////////////////////////////////////
     //              REDIRECTION
     ////////////////////////////////////////////////
@@ -672,21 +655,21 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function loadRedirections()
     {
-        $tabResults = array();
+        $tabResults = [];
         $magRedirections = $this->optimizmeMazenRedirections->getAllRedirections();
 
         if (is_array($magRedirections) && count($magRedirections)>0) {
             foreach ($magRedirections as $redirection) {
-
                 // get store base url for this url rewrite (depending from store id)
                 $storeBaseUrl = $this->optimizmeMazenUtils->getStoreBaseUrl($redirection['store_id']);
 
                 array_push(
-                    $tabResults, array(
+                    $tabResults,
+                    [
                         'id' => $redirection['url_rewrite_id'],
                         'request_path' => $storeBaseUrl. $redirection['request_path'],
                         'target_path' => $storeBaseUrl. $redirection['target_path']
-                    )
+                    ]
                 );
             }
         }
@@ -739,16 +722,6 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
     ////////////////////////////////////////////////
 
     /**
-     * Load false content
-     */
-    public function loadLoremIpsum()
-    {
-        $nbParagraphes = rand(2, 4);
-        $content = file_get_contents('http://loripsum.net/api/'.$nbParagraphes.'/short/decorate/');
-        $this->returnAjax['content'] = $content;
-    }
-
-    /**
      * Check if has error or not
      *
      * @return bool
@@ -761,23 +734,6 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
             return false;
         }
     }
-
-    /**
-     * @param $msg
-     * @param string $typeResult : success, info, warning, danger
-     */
-    /*
-    public function setMsgReturn($msg, $typeResult='success')
-    {
-        $this->returnResult['result'] = $typeResult;
-        $this->returnResult['message'] = $msg;
-
-        // return results
-        header("Access-Control-Allow-Origin: *");
-        header('Content-Type: application/json');
-        echo json_encode($this->returnResult);
-    }
-    */
 
     /**
      * Création d'un post
@@ -793,7 +749,7 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
      * @param $msg
      * @param int $trace
      */
-    public function addMsgError($msg, $trace=0)
+    public function addMsgError($msg, $trace = 0)
     {
         if ($trace == 1) {
             $logTrace = __CLASS__ . ', ' . debug_backtrace()[1]['function'] . ': ';

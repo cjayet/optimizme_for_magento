@@ -114,7 +114,6 @@ class Index extends \Magento\Framework\App\Action\Action
             }
 
             if ($doAction == 1) {
-
                 // post id
                 $postId = '';
                 if (is_numeric($dataOptimizme->url_cible)) {
@@ -295,22 +294,18 @@ class Index extends \Magento\Framework\App\Action\Action
                         if (is_array($optimizmeMazenAction->tabErrors) && count($optimizmeMazenAction->tabErrors) > 0) {
                             $optimizmeMazenAction->returnResult['result'] = 'danger';
                             $msg = 'One or several errors have been raised: ';
-                            $msg .= $optimizmeMazenUtils->getListMessages($optimizmeMazenAction->tabErrors);
-                            $this->setMsgReturn($msg, 'danger');
+                            $this->setMsgReturn($msg, 'danger', $optimizmeMazenAction->tabErrors);
                         } elseif (is_array($optimizmeMazenAction->returnAjax) && count($optimizmeMazenAction->returnAjax) > 0) {
                             // ajax to return - encode data
                             $this->setDataReturn($optimizmeMazenAction->returnAjax);
                         } else {
                             // no error, OK !
                             $msg = 'Action done!';
-                            $msg .= $optimizmeMazenUtils->getListMessages($optimizmeMazenAction->tabSuccess);
-                            $this->setMsgReturn($msg);
+                            $this->setMsgReturn($msg, 'success', $optimizmeMazenAction->tabSuccess);
                         }
                     }
                 }
             }
-
-
         }
     }
 
@@ -320,7 +315,7 @@ class Index extends \Magento\Framework\App\Action\Action
      * @param $tabData
      * @param string $typeResult : success, info, warning, danger
      */
-    public function setDataReturn($tabData, $typeResult='success')
+    public function setDataReturn($tabData, $typeResult = 'success')
     {
         $this->returnResult['result'] = $typeResult;
 
@@ -339,12 +334,16 @@ class Index extends \Magento\Framework\App\Action\Action
     /**
      * Return simple JSON message
      * @param $msg
-     * @param string $typeResult : success, info, warning, danger
+     * @param string $typeResult
+     * @param array $msgComplementaires
      */
-    public function setMsgReturn($msg, $typeResult='success')
+    public function setMsgReturn($msg, $typeResult = 'success', $msgComplementaires = [])
     {
         $this->returnResult['result'] = $typeResult;
         $this->returnResult['message'] = $msg;
+        if (is_array($msgComplementaires) && count($msgComplementaires)>0) {
+            $this->returnResult['logs'] = $msgComplementaires;
+        }
 
         // return results
         $jsonHelper = $this->_objectManager->create('Magento\Framework\Json\Helper\Data');
