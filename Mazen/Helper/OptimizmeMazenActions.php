@@ -95,15 +95,10 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
                 $productUrl = $product->getUrlModel()->getUrl($product);
 
                 if ($product->getName() != '') {
-                    if ($product->getStatus() == 1) {
-                        $status = 'Publish';
-                    } else {
-                        $status = 'Not publish';
-                    }
                     $prodReturn = array(
                         'ID' => $product->getId(),
-                        'post_title' => $product->getName(),
-                        'post_status' => $status,
+                        'title' => $product->getName(),
+                        'publish' => $product->getStatus(),
                         'url' => $productUrl
                     );
                     array_push($productsReturn, $prodReturn);
@@ -615,15 +610,10 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
                 $url = $objectManager->create('Magento\Cms\Helper\Page')->getPageUrl($pageBoucle['page_id']);
 
                 if ($page->getTitle() != '') {
-                    if ($page->getIsActive() == 1) {
-                        $status = 'publish';
-                    } else {
-                        $status = 'draft';
-                    }
                     $prodReturn = array(
                         'ID' => $page->getPageId(),
-                        'post_title' => $page->getTitle(),
-                        'post_status' => $status,
+                        'title' => $page->getTitle(),
+                        'publish' => $page->getIsActive(),
                         'url' => $url
                     );
                     array_push($productsReturn, $prodReturn);

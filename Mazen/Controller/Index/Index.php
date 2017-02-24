@@ -115,6 +115,7 @@ class Index extends \Magento\Framework\App\Action\Action
 
             if ($doAction == 1) {
 
+                // post id
                 $postId = '';
                 if (is_numeric($dataOptimizme->url_cible)) {
                     $postId = $dataOptimizme->url_cible;
@@ -123,6 +124,7 @@ class Index extends \Magento\Framework\App\Action\Action
                         $postId = $dataOptimizme->id_post;
                     }
                 }
+
 
                 // ACTIONS
                 if ($dataOptimizme->action == '') {
