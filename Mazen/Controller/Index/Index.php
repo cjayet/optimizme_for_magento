@@ -23,6 +23,7 @@ class Index extends \Magento\Framework\App\Action\Action
     protected $jsonHelper;
 
     protected $boolNoAction;
+    protected $OPTIMIZME_MAZEN_VERSION;
     protected $OPTIMIZME_MAZEN_JWT_SECRET;
 
     /**
@@ -36,6 +37,7 @@ class Index extends \Magento\Framework\App\Action\Action
     ) {
         $this->resultPageFactory = $resultPageFactory;
         $this->boolNoAction = 0;
+        $this->OPTIMIZME_MAZEN_VERSION = '1.0.0';
         $this->OPTIMIZME_MAZEN_JWT_SECRET = '';
 
         parent::__construct($context);
@@ -136,6 +138,9 @@ class Index extends \Magento\Framework\App\Action\Action
                         // init dialog
                         case 'register_cms':
                             $optimizmeMazenAction->registerCMS($dataOptimizme);
+                            break;
+                        case 'get_plugin_version':
+                            $optimizmeMazenAction->getPluginVersion($this->OPTIMIZME_MAZEN_VERSION);
                             break;
 
                         // products

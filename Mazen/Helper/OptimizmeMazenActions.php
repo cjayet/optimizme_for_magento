@@ -717,6 +717,15 @@ class OptimizmeMazenActions extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
 
+    /**
+     * Return Mazen plugin version
+     * @param version $v
+     */
+    public function getPluginVersion($v)
+    {
+        $this->returnAjax['version'] = $v;
+    }
+
     ////////////////////////////////////////////////
     //              UTILS
     ////////////////////////////////////////////////
