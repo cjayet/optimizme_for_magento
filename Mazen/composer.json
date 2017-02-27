@@ -1,5 +1,5 @@
 {
-    "name": "optimizme/mazen-connector",
+    "name": "optimizme/mazen-connector-for-magento2",
     "description": "Bridge with MAZEN, by Optimiz.me",
     "type": "magento2-module",
     "version": "1.0.0",
