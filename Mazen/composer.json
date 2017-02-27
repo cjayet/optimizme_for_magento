@@ -1,6 +1,6 @@
 {
     "name": "optimizme/mazen-seo-connector-for-magento2",
-    "description": "Connector with MAZEN, by Optimiz.me",
+    "description": "Connector with MAZEN by Optimiz.me",
     "type": "magento2-module",
     "version": "1.0.0",
     "extra": {
